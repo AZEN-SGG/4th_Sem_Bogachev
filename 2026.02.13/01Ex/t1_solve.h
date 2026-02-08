@@ -1,30 +1,31 @@
 #pragma once
 
-#include "rb_tree.h"
+#include "avl_tree.h"
 
 template <typename T>
-int rb_tree<T>::get_number_elem_in_subtrees_with_k_nodes (const rb_tree_node<T> *curr, const int k)
+int avl_tree<T>::get_number_end_elem_with_name_in_subtree (const avl_tree_node<T> *curr, const char * s)
 {
-	int number = 1;
+	int number = 0;
 
 	if (curr->left)
-		number += get_number_elem_in_subtrees_with_k_nodes(curr->left, k);
+		number += get_number_end_elem_with_name_in_subtree(curr->left, s);
 
 	if (curr->right)
-		number += get_number_elem_in_subtrees_with_k_nodes(curr->right, k);
+		number += get_number_end_elem_with_name_in_subtree(curr->right, s);
 
-	if (number > k)
-		number--;
+	else
+		if (curr->left == nullptr)
+			number += (is_from_set(curr->name.get(), s) != 0);
 
 	return number;
 }
 
 template <typename T>
-int rb_tree<T>::t1_solve (const int k) const
+int avl_tree<T>::t1_solve (const char * s) const
 {
-	if (!root || k < 1)
+	if (root == nullptr)
 		return 0;
 	
-	return get_number_elem_in_subtrees_with_k_nodes(root, k);
+	return get_number_end_elem_with_name_in_subtree(root, s);
 }
 

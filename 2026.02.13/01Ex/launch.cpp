@@ -42,13 +42,7 @@ int launch (char *path, char *filename, const char *s, int r)
 	fprintf (stdout, "Original tree:\n");
 	olha->print(r);
 
-	(void)s;
-	(void)r;
-	(void)path;
-
-	/*
-
-    int (avl_tree<T>::*solves[])(const int) const = {
+    int (avl_tree<T>::*solves[])(const char *) const = {
         &avl_tree<T>::t1_solve,
     };
     int len = sizeof(solves) / sizeof(solves[0]);
@@ -73,8 +67,6 @@ int launch (char *path, char *filename, const char *s, int r)
 
 	    fprintf(stdout, "%s : Task = %d S = %s Result = %d Elapsed = %.2f\n", path, i + 1, s, res, t);
     }
-
-	*/
 
 	delete olha;
 

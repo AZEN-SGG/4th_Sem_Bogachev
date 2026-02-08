@@ -4,6 +4,8 @@
 #include "io_status.h"
 #include "avl_tree_node.h"
 
+#include <string.h>
+
 template <typename T>
 class avl_tree
 {
@@ -65,10 +67,21 @@ class avl_tree
 
 		void print (const int r, FILE *fp = stdout) const { print_subtree(root, 0, r, fp); }
 
-		// Solve 1
-
 		// Solves
-		int t1_solve(const int k) const;
+		static int is_from_set (const char *name, const char *set)
+		{
+			int i = 0;
+			for (; name[i] != '\0' ; i++)
+				if (strchr(set, name[i]) == nullptr)
+					return 0;
+
+			return i;
+		}
+
+		// Solve 1
+		static int get_number_end_elem_with_name_in_subtree (const avl_tree_node<T> *curr, const char * s);
+
+		int t1_solve(const char * s) const;
 		int t2_solve(const int k) const;
 		int t3_solve(const int k) const;
 		int t4_solve(const int k) const;

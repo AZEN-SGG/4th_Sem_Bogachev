@@ -6,7 +6,7 @@
 
 #include "avl_tree.h"
 
-//#include "t1_solve.h"
+#include "t1_solve.h"
 
 #include <ctime>
 #include <new>

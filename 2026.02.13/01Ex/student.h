@@ -7,6 +7,9 @@
 #include <string.h>
 #include <memory>
 
+template <typename T>
+class avl_tree;
+
 class student
 {
 	private:
@@ -68,6 +71,7 @@ class student
 		int operator== (const student& x) const { return cmp(x) == 0; }
 		int operator!= (const student& x) const { return cmp(x) != 0; }
 
+		friend class avl_tree<student>;
 	private:
 		io_status init (const char *n, int v)
 		{
