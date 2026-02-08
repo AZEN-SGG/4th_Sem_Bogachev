@@ -1,19 +1,11 @@
 #ifndef STUDENT_H
 #define STUDENT_H
 
+#include "io_status.h"
+
 #include <stdio.h>
 #include <string.h>
 #include <memory>
-
-enum class io_status
-{
-	success,
-	eof,
-	format,
-	memory,
-	open,
-	create,
-};
 
 class student
 {
@@ -31,7 +23,10 @@ class student
 		student& operator= (const student& x) = delete;
 		student& operator= (student&& x) = default;
 
-		void print (FILE *fp = stdout) const { fprintf(fp, "%s %d\n", name.get(), value); }
+		void print (FILE *fp = stdout) const
+		{
+			fprintf(fp, "%s %d\n", name.get(), value);
+		}
 
 		io_status read (FILE *fp = stdin)
 		{
