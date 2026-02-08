@@ -283,11 +283,7 @@ class avl_tree
 				print_subtree(curr->left, level + 1, r, fp);
 
 			if (curr->right)
-			{
-				if (curr->left)
-					fprintf(fp, "\n");
 				print_subtree(curr->right, level + 1, r, fp);
-			}
         }
 };
 

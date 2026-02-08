@@ -44,6 +44,9 @@ class avl_tree_node : public T
 		{
 			for (int i = 0 ; i < level ; ++i)
 				fprintf(fp, "  ");
+
+			if (balance >= 0)
+				fprintf(fp, " ");
 			fprintf(fp, "%d ", balance);
 			static_cast<const T*>(this)->print(fp);
 		}
