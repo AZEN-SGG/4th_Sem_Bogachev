@@ -8,6 +8,7 @@ enum class io_status
 	format,
 	memory,
 	open,
+	read,
 	create,
 };
 

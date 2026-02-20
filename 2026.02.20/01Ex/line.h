@@ -4,6 +4,8 @@
 #include <memory>
 #include <cstring>
 
+#define LEN 1234
+
 class line
 {
 	public:

@@ -28,7 +28,10 @@ int main(int argc, char * argv[])
 			case io_status::success:
 				continue;
 			case io_status::open:
-				fprintf (stderr, "Error: Cannot open %s\n", argv[1]);
+				fprintf (stderr, "Error: Cannot open file\n");
+				break;
+			case io_status::read:
+				fprintf (stderr, "Error: While reading of file %s\n", argv[1]);
 				break;
 			case io_status::format:
 				fprintf (stderr, "Error: Wrong format of file %s\n", argv[1]);
