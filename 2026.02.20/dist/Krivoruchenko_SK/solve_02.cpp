@@ -1,4 +1,4 @@
-#include "solve.h"
+#include "solve_02.h"
 
 int inclusion (char *str, const rb_tree<line> *olha, const char *delim)
 {
@@ -55,7 +55,7 @@ io_status solve_02 (char *f_in, char *f_out, char *s, const char *t, int *r)
 		return ret;
 
 // Отладочная
-//	olha->print(100);
+	olha->print(100);
 
 	FILE *in, *out;
 

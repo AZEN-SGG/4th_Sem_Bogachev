@@ -1,6 +1,6 @@
-#include "solve.h"
+#include "solve_01.h"
 
-int inclusion (char *str, const rb_tree<line> *olha, const char *delim)
+int intersect (char *str, const b_tree<line> *olha, const char *delim)
 {
 	char *saveptr = nullptr;
 
@@ -8,14 +8,14 @@ int inclusion (char *str, const rb_tree<line> *olha, const char *delim)
 		return 0;
 
 	do {
-		if (olha->find(str) == nullptr)
-			return 0;
+		if (olha->find(str) != nullptr)
+			return 1;
 	} while ((str = strtok_r(nullptr, delim, &saveptr)) != nullptr);
 
-	return 1;
+	return 0;
 }
 
-io_status find_inclusion (FILE *in, FILE *out, const rb_tree<line> *olha, const char *t, int *res)
+io_status find_intersection (FILE *in, FILE *out, const b_tree<line> *olha, const char *t, int *res)
 {
 	char buffer[LEN] = {},
 		 words[LEN] = {};
@@ -31,7 +31,7 @@ io_status find_inclusion (FILE *in, FILE *out, const rb_tree<line> *olha, const 
 		if (words[len - 1] == '\n')
 			words[len - 1] = '\0';
 
-		if (inclusion(words, olha, t))
+		if (intersect(words, olha, t))
 		{
 			(*res)++;
 			fprintf(out, "%s", buffer);
@@ -44,9 +44,9 @@ io_status find_inclusion (FILE *in, FILE *out, const rb_tree<line> *olha, const 
 	return io_status::success;
 }
 
-io_status solve_02 (char *f_in, char *f_out, char *s, const char *t, int *r)
+io_status solve_01 (char *f_in, char *f_out, char *s, const char *t, int m, int *r)
 {
-	std::unique_ptr<rb_tree<line>> olha = std::make_unique<rb_tree<line>>();
+	std::unique_ptr<b_tree<line>> olha = std::make_unique<b_tree<line>>(m);
     if (olha == nullptr)
 		return io_status::memory;
 
@@ -68,7 +68,7 @@ io_status solve_02 (char *f_in, char *f_out, char *s, const char *t, int *r)
 		return io_status::open;
 	}
 
-	ret = find_inclusion(in, out, olha.get(), t, r);
+	ret = find_intersection(in, out, olha.get(), t, r);
 	
 	fclose(in);
 	fclose(out);
