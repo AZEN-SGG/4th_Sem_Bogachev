@@ -54,7 +54,8 @@ io_status solve_01 (char *f_in, char *f_out, char *s, const char *t, int m, int 
 	if (ret != io_status::success)
 		return ret;
 
-	olha->print(100);
+// Отладочная
+//	olha->print(100);
 
 	FILE *in, *out;
 
