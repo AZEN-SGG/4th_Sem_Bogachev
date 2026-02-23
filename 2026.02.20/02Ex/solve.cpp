@@ -5,7 +5,7 @@ int inclusion (char *str, const rb_tree<line> *olha, const char *delim)
 	char *saveptr = nullptr;
 
 	if ((str = strtok_r(str, delim, &saveptr)) == nullptr)
-		return 0;
+		return 1;
 
 	do {
 		if (olha->find(str) == nullptr)
