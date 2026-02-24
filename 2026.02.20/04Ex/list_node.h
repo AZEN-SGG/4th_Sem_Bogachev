@@ -1,5 +1,7 @@
-#ifndef LIST_H
-#define LIST_H
+#ifndef LIST_NODE_H
+#define LIST_NODE_H
+
+#include <cstdio>
 
 template <typename T>
 class list;

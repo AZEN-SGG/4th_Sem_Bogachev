@@ -5,6 +5,7 @@
 
 #include <memory>
 #include <cstring>
+#include <cstdio>
 
 #define LEN 1234
 
@@ -12,15 +13,15 @@ class operation
 {
 	public:
 		using uptr = std::unique_ptr<char[]>;
-		using cmpFn = int(*)(const operation&, const char *);
+		using func = int(*)(const operation&, const char *);
 
 	private:
 		uptr key;
-		cmpFn func;
+		func cmp_fn = nullptr;
 	
 	public:
 		char * get_key () { return key.get(); }
-		cmpFn get_fn () { return func; }
+		func get_fn () { return cmp_fn; }
 
 		io_status read (const char *k, const char *v)
 		{
@@ -38,25 +39,29 @@ class operation
 				if (v[1] == '\0')
 				{
 					if (v[0] == '>')
-						func = &operation::lt;
+						cmp_fn = &operation::lt;
 					else if (v[0] == '<')
-						func = &operation::gt;
+						cmp_fn = &operation::gt;
+					else
+						return io_status::format;
 				} else if (v[1] == '=')
 				{
 					switch (v[0])
 					{
 						case '>':
-							func = &operation::le;
+							cmp_fn = &operation::le;
 							break;
 						case '<':
-							func = &operation::ge;
+							cmp_fn = &operation::ge;
 							break;
 						case '=':
-							func = &operation::eq;
+							cmp_fn = &operation::eq;
 							break;
+						default:			
+							return io_status::format;
 					}
 				} else if (v[0] == '<' && v[1] == '>')
-					func = &operation::ne;
+					cmp_fn = &operation::ne;
 				else
 					return io_status::format;
 			} else
@@ -97,12 +102,19 @@ class operation
 			return strcmp(key.get(), x);
 		}
 
-		static int lt (const operation& x, const char *str) { x.cmp(str); }
-		static int le (const operation& x, const char *str) { x.cmp(str); }
-		static int gt (const operation& x, const char *str) { x.cmp(str); }
-		static int ge (const operation& x, const char *str) { x.cmp(str); }
-		static int eq (const operation& x, const char *str) { x.cmp(str); }
-		static int ne (const operation& x, const char *str) { x.cmp(str); }
+		static int lt (const operation& x, const char *str) { return x.cmp(str) < 0; }
+		static int le (const operation& x, const char *str) { return x.cmp(str) <= 0; }
+		static int gt (const operation& x, const char *str) { return x.cmp(str) > 0; }
+		static int ge (const operation& x, const char *str) { return x.cmp(str) >= 0; }
+		static int eq (const operation& x, const char *str) { return x.cmp(str) == 0; }
+		static int ne (const operation& x, const char *str) { return x.cmp(str) != 0; }
+
+		int is_valid (const char * x) const
+		{
+			if (cmp_fn != nullptr)
+				return cmp_fn(*this, x);
+			return 0;
+		}
 };
 
 #endif // OPERATION_H

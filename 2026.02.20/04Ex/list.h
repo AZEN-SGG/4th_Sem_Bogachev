@@ -1,7 +1,11 @@
 #ifndef LIST_H
 #define LIST_H
 
+#include "io_status.h"
 #include "list_node.h"
+
+#include <cstring>
+#include <cstdio>
 
 template <typename T>
 class list
@@ -46,7 +50,7 @@ class list
 
 			if ((key = strtok_r(str, delim, &savekey)) != nullptr)
 			{
-				value = strtok_r(replace, delim, &savevalue);
+				value = strtok_r(oper, delim, &savevalue);
 				x.read(key, value);
 
 				auto node = new list_node<T>((list_node<T>&&)x);
@@ -130,8 +134,17 @@ class list
 			fclose(fp);
 			return ret;	
 		}
+
+		int fit_one (const char *str) const
+		{
+			for (list_node<T> *curr = head ; curr ; curr = curr->next)
+				if (curr->is_valid(str))
+					return 1;
+
+			return 0;
+		}
     private:
-		void list::erase ()
+		void erase ()
 		{
 			list_node<T> *next;
 			for (list_node<T> *curr = head; curr; curr = next)
