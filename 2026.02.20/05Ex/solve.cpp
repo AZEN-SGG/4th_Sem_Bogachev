@@ -1,7 +1,7 @@
 #include "solve.h"
 
 
-io_status write_good_sentence (FILE *in, FILE *out, const list<operation> *shai_hulud, const char *t, int *res)
+io_status write_sentence_where_all (FILE *in, FILE *out, const list<operation> *shai_hulud, const char *t, int *res)
 {
 	char word[LEN] = {},
 		 buffer[LEN] = {};
@@ -10,7 +10,8 @@ io_status write_good_sentence (FILE *in, FILE *out, const list<operation> *shai_
 
 	while (fgets(buffer, LEN, in) != nullptr)
 	{
-		int len = 0;
+		int len = 0,
+			flag = 1;
 
 		// Идём по строке
 		for (len = 0 ; buffer[len] != '\0' ; len++)
@@ -24,14 +25,19 @@ io_status write_good_sentence (FILE *in, FILE *out, const list<operation> *shai_
 
 		while ((token = strtok_r(token, t, &saveptr)))
 		{
-			if (shai_hulud->fit_one(token))
+			if (!shai_hulud->fit_all(token))
 			{
-				(*res)++;
-				fprintf(out, "%s", buffer);
+				flag = 0;
 				break;
 			}
 
 			token = nullptr;
+		}
+
+		if (flag)
+		{
+			(*res)++;
+			fprintf(out, "%s", buffer);
 		}
 	}
 
@@ -41,7 +47,7 @@ io_status write_good_sentence (FILE *in, FILE *out, const list<operation> *shai_
 	return io_status::success;
 }
 
-io_status solve_04 (char *f_in, char *f_out, char *s, char *x, const char *t, int *r)
+io_status solve_05 (char *f_in, char *f_out, char *s, char *x, const char *t, int *r)
 {
 	auto shai_hulud = std::make_unique<list<operation>>();
     if (shai_hulud == nullptr)
@@ -65,7 +71,7 @@ io_status solve_04 (char *f_in, char *f_out, char *s, char *x, const char *t, in
 		return io_status::open;
 	}
 
-	ret = write_good_sentence(in, out, shai_hulud.get(), t, r);
+	ret = write_sentence_where_all(in, out, shai_hulud.get(), t, r);
 	
 	fclose(in);
 	fclose(out);
