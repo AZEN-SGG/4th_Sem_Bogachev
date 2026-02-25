@@ -24,8 +24,6 @@ io_status write_good_sentence (FILE *in, FILE *out, const list<operation> *shai_
 
 		while ((token = strtok_r(token, t, &saveptr)))
 		{
-			token = nullptr;
-			
 			if (shai_hulud->fit_one(token))
 			{
 				(*res)++;

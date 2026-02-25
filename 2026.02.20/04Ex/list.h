@@ -50,8 +50,12 @@ class list
 
 			if ((key = strtok_r(str, delim, &savekey)) != nullptr)
 			{
-				value = strtok_r(oper, delim, &savevalue);
-				x.read(key, value);
+				if ((value = strtok_r(oper, delim, &savevalue)) == nullptr)
+					return io_status::format;
+
+				io_status ret = x.read(key, value);
+				if (ret != io_status::success)
+					return ret;
 
 				auto node = new list_node<T>((list_node<T>&&)x);
 				if (node == nullptr)
@@ -63,7 +67,9 @@ class list
 
 			while ((key = strtok_r(nullptr, delim, &savekey)) != nullptr)
 			{
-				value = strtok_r(nullptr, delim, &savevalue);
+				if ((value = strtok_r(nullptr, delim, &savevalue)) == nullptr)
+					return io_status::format;
+			
 				io_status ret = x.read(key, value);
 				if (ret != io_status::success)
 					return ret;
