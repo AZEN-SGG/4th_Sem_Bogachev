@@ -5,7 +5,7 @@ int inclusion (char *str, const rb_tree<line> *olha, const char *delim)
 	char *saveptr = nullptr;
 
 	if ((str = strtok_r(str, delim, &saveptr)) == nullptr)
-		return 0;
+		return 1;
 
 	do {
 		if (olha->find(str) == nullptr)
@@ -55,7 +55,7 @@ io_status solve_02 (char *f_in, char *f_out, char *s, const char *t, int *r)
 		return ret;
 
 // Отладочная
-	olha->print(100);
+//	olha->print(100);
 
 	FILE *in, *out;
 
