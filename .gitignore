@@ -92,6 +92,8 @@ pkg/
 *.rar
 *.7z
 *.bak
+*.stderr
+*.stdout
 
 # FreeFileSync files
 *.ffs_db
