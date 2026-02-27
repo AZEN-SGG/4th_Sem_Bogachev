@@ -1,6 +1,6 @@
-#include "solve_06.h"
+#include "solve_09.h"
 
-io_status write_sentence_with_right_format (FILE *in, FILE *out, pattern *mister_x, const char *t, int *res)
+io_status write_sentence_with_right_out (FILE *in, FILE *out, pattern *mister_x, const char *t, int *res)
 {
 	char word[LEN] = {},
 		 buffer[LEN] = {};
@@ -23,7 +23,7 @@ io_status write_sentence_with_right_format (FILE *in, FILE *out, pattern *mister
 
 		while ((token = strtok_r(token, t, &saveptr)))
 		{
-			if (mister_x->with_underscore(token))
+			if (mister_x->with_out(token, 0, 0))
 			{
 				fprintf(out, "%s", buffer);
 				(*res)++;
@@ -40,7 +40,7 @@ io_status write_sentence_with_right_format (FILE *in, FILE *out, pattern *mister
 	return io_status::success;
 }
 
-io_status solve_06 (char *f_in, char *f_out, char *s, const char *t, int *r)
+io_status solve_09 (char *f_in, char *f_out, char *s, const char *t, int *r)
 {
 	auto mister_x = std::make_unique<pattern>();
     if (mister_x == nullptr)
@@ -61,7 +61,7 @@ io_status solve_06 (char *f_in, char *f_out, char *s, const char *t, int *r)
 		return io_status::open;
 	}
 
-	ret = write_sentence_with_right_format(in, out, mister_x.get(), t, r);
+	ret = write_sentence_with_right_out(in, out, mister_x.get(), t, r);
 	
 	fclose(in);
 	fclose(out);

@@ -30,25 +30,6 @@ class list
             return *this;
         }
 
-		io_status add_node (list_node<T>& x, list_node<T> **curr)
-		{
-			auto node = new list_node<T>((list_node<T>&&)x);
-			if (node == nullptr)
-				return io_status::memory;
-			
-			if (head == nullptr)
-			{
-				head = node;
-				(*curr) = head;
-			} else
-			{
-				(*curr)->next = node;
-				(*curr) = (*curr)->next;
-			}
-
-			return io_status::success;
-		}
-
         void print (unsigned int r, FILE *fp = stdout) const
 		{
 			unsigned int i = 0;
@@ -107,33 +88,6 @@ class list
 			return io_status::success;
 		}
 
-		io_status read (char *str, const char *delim)
-		{
-			char *saveptr = nullptr,
-				 *token = nullptr;
-			list_node<T> x, *curr = nullptr;
-			io_status ret;
-
-			erase();
-			token = str;
-
-			while ((token = strtok_r(token, delim, &saveptr)) != nullptr)
-			{
-				if ((ret = x.read(token)) != io_status::success)
-					return ret;
-
-				if ((ret = add_node(x, &curr)) != io_status::success)
-				{
-					erase();
-					return ret;
-				}
-				
-				token = nullptr;
-			}
-
-			return io_status::success;
-		}
-
         io_status read (FILE *fp = stdin, unsigned int max_read = -1)
 		{
 			list_node<T> buf, *tail;
@@ -185,15 +139,6 @@ class list
 			
 			fclose(fp);
 			return ret;	
-		}
-
-		int with_underscore (const char *str) const
-		{
-			for (list_node<T> *curr = head ; curr ; curr = curr->next)
-				if (curr->with_underscore(str))
-					return 1;
-
-			return 0;
 		}
 
 		int fit_one (const char *str) const

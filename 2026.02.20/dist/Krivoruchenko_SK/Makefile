@@ -5,7 +5,7 @@ M ?= 10
 
 OBJ_COMMON = 
 
-NUMS = 1 2 3 4 5 6
+NUMS = 1 2 3 4 5 6 7 8 9
 
 OUTS = $(foreach n,$(NUMS),$(shell printf "a%02d.out\n" "$(n)"))
 
