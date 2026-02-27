@@ -1,6 +1,6 @@
 #include "solve.h"
 
-io_status write_sentence_with_right_percent (FILE *in, FILE *out, const list<pattern> *shai_hulud, const char *t, int *res)
+io_status write_sentence_with_right_percent (FILE *in, FILE *out, pattern *mister_x, const char *t, int *res)
 {
 	char word[LEN] = {},
 		 buffer[LEN] = {};
@@ -23,7 +23,7 @@ io_status write_sentence_with_right_percent (FILE *in, FILE *out, const list<pat
 
 		while ((token = strtok_r(token, t, &saveptr)))
 		{
-			if (shai_hulud->with_percent(token))
+			if (mister_x->with_percent(token, 0, 0))
 			{
 				fprintf(out, "%s", buffer);
 				(*res)++;
@@ -42,16 +42,13 @@ io_status write_sentence_with_right_percent (FILE *in, FILE *out, const list<pat
 
 io_status solve_07 (char *f_in, char *f_out, char *s, const char *t, int *r)
 {
-	auto shai_hulud = std::make_unique<list<pattern>>();
-    if (shai_hulud == nullptr)
+	auto mister_x = std::make_unique<pattern>();
+    if (mister_x == nullptr)
 		return io_status::memory;
 
-	io_status ret = shai_hulud->read(s, t);
+	io_status ret = mister_x->read(s);
 	if (ret != io_status::success)
 		return ret;
-
-// Отладочная
-//	shai_hulud->print(100);
 
 	FILE *in, *out;
 
@@ -64,7 +61,7 @@ io_status solve_07 (char *f_in, char *f_out, char *s, const char *t, int *r)
 		return io_status::open;
 	}
 
-	ret = write_sentence_with_right_percent(in, out, shai_hulud.get(), t, r);
+	ret = write_sentence_with_right_percent(in, out, mister_x.get(), t, r);
 	
 	fclose(in);
 	fclose(out);

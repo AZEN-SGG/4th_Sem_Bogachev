@@ -98,6 +98,39 @@ class pattern
 			fprintf(fp, "\n");
 		}
 
+		int with_in (const char *str, int i_word, int i_bord)
+		{
+			int len = 0;
+
+			for ( ; word[i_word] != '\0' ; ++i_word, ++len)
+			{
+				int res = 0;
+
+				switch (spec[i_word])
+				{
+					case type_pattern::in:
+						res = is_in(str, len, i_bord);
+						i_bord++;
+						break;
+					case type_pattern::out:
+						res = is_out_off(str, len, i_bord);
+						i_bord++;
+						len += 5;
+						break;
+					default:
+						res = (word[i_word] == str[len]);
+				}
+				
+				if (!res)
+					return 0;
+			}
+
+			if (str[len] != '\0')
+				return 0;
+
+			return 1;
+		}
+
 		int with_percent (const char *str, int i_word, int i_bord)
 		{
 			int len = 0;
@@ -183,6 +216,12 @@ class pattern
 			} while (str[len++] != '\0');
 
 			return 0;
+		}
+
+		int is_in (const char *str, int str_i, int bord_i)
+		{
+			return ((str[str_i] >= span[bord_i].start) &&
+					(str[str_i] <= span[bord_i].end));
 		}
 
 		int is_in_off (const char *str, int str_i, int bord_i)

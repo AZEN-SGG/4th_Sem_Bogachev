@@ -86,57 +86,13 @@ class list
 			return io_status::success;
 		}
 
-        io_status read (FILE *fp = stdin, unsigned int max_read = -1)
+		int with_in (const char *str) const
 		{
-			list_node<T> buf, *tail;
-			unsigned int i = 0;
-			io_status ret;
+			for (list_node<T> *curr = head ; curr ; curr = curr->next)
+				if (curr->with_in(str, 0, 0))
+					return 1;
 
-			if ((ret = buf.read(fp)) != io_status::success)
-				return ret;
-
-			head = new list_node<T>;
-			if (head == nullptr)
-				return io_status::memory;
-
-			*head = (list_node<T>&&)buf;
-			list_node<T> *curr = head;
-
-			while ((i < max_read) && (buf.read(fp) == io_status::success))
-			{
-				tail = new list_node<T>;
-
-				if (tail == nullptr)
-				{
-					erase();
-					return io_status::memory;
-				}
-
-				*tail = (list_node<T>&&)buf;
-				curr->next = tail;
-				curr = tail;
-				
-				i++;
-			} if ((i < max_read) && (!feof(fp)))
-			{
-				erase();
-				return io_status::format;
-			}
-
-			return io_status::success;
-		}
-
-        io_status read_file (const char *filename)
-		{
-			FILE *fp = fopen(filename, "r");
-
-			if (fp == nullptr)
-				return io_status::open;
-			
-			io_status ret = read(fp);
-			
-			fclose(fp);
-			return ret;	
+			return 0;
 		}
 
 		int with_percent (const char *str) const

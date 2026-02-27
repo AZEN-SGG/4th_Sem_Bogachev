@@ -4,6 +4,7 @@
 #include "io_status.h"
 
 #include <memory>
+#include <cstdio>
 
 #define LEN 1234
 
