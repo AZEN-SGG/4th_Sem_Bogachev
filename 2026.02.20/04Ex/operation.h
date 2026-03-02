@@ -42,6 +42,8 @@ class operation
 						cmp_fn = &operation::lt;
 					else if (v[0] == '<')
 						cmp_fn = &operation::gt;
+					else if (v[0] == '=')
+						cmp_fn = &operation::eq;
 					else
 						return io_status::format;
 				} else if (v[1] == '=')
@@ -53,9 +55,6 @@ class operation
 							break;
 						case '<':
 							cmp_fn = &operation::ge;
-							break;
-						case '=':
-							cmp_fn = &operation::eq;
 							break;
 						default:			
 							return io_status::format;
