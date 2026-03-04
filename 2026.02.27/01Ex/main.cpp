@@ -4,6 +4,9 @@
 #include "io_status.h"
 #include "solve.h"
 
+template<>
+unsigned int list2<record>::r = -1;
+
 int main(int argc, char * argv[])
 {
     int res = 0;

@@ -142,7 +142,7 @@ class pattern
 
 			do
 			{
-				int res = with_percent (str + len, i_word, i_bord);
+				int res = is_valid (str + len, i_word, i_bord);
 				if (res)
 					return res;
 			} while (str[len++] != '\0');

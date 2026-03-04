@@ -1,8 +1,6 @@
 #ifndef LIST_NODE_H
 #define LIST_NODE_H
 
-#include "student.h"
-
 template <typename T>
 class list2;
 
@@ -50,7 +48,5 @@ class list2_node : public T
 
 		friend class list2<T>;
 };
-
-extern template class list2_node<student>;
 
 #endif // LIST_NODE_H

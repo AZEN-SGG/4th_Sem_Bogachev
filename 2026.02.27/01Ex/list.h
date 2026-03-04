@@ -11,8 +11,7 @@ class list2
 {
 	private:
 		list2_node<T> * head = nullptr;
-		static int m;
-		static int r;
+		static unsigned int r;
 	public:
 		list2 () = default;
 		~list2 () { erase (); }
@@ -38,10 +37,9 @@ class list2
 			return *this;
 		}
 
-		static void set_m (int m) { list2<T>::m = m; };
 		static void set_r (int r) { list2<T>::r = r; };
 
-		io_status read (FILE *fp = stdin)
+		io_status read (FILE *fp = stdin, const unsigned int max_read = -1)
 		{
 			list2_node<T> buf,
 				*prev = nullptr,
@@ -60,8 +58,8 @@ class list2
 			*head = (list2_node<T> &&)buf;
 			list2_node<T> *curr = head;
 	
-			int i = 1;
-			while ((i < m) && (buf.read(fp) == io_status::success))
+			unsigned int i = 1;
+			while ((i < max_read) && (buf.read(fp) == io_status::success))
 			{
 				next = new list2_node<T>;
 	
@@ -80,7 +78,7 @@ class list2
 				curr = next;
 
 				i++;
-			} if ((!feof(fp)) && (i < m))
+			} if ((!feof(fp)) && (i < max_read))
 			{
 				erase();
 				return io_status::format;
@@ -92,12 +90,24 @@ class list2
 			return io_status::success;
 		}
 
-		void print (FILE *fp = stdout, int level = 0) const
+		io_status read_file (char *filename, const unsigned int max_read = -1)
 		{
-			int i = 0;
+			FILE *fp = fopen(filename, "r");
+			if (fp == nullptr)
+				return io_status::open;
+
+			io_status ret = read(fp, max_read);
+
+			fclose(fp);
+			return ret;
+		}
+
+		void print (FILE *fp = stdout) const
+		{
+			unsigned int i = 0;
 			for (const list2_node<T> *curr = head ; (curr && (i < r)) ; curr = curr->next)
 			{
-				curr->print(fp, level);
+				curr->print(fp);
 				i++;
 			}
 		}

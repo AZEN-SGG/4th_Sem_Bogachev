@@ -49,15 +49,31 @@ class record
 
 		bool compare_name (condition x, const record& y) const
 		{
+			int cmp = 0;
+			
+			if (name == nullptr)
+			{
+				if (y.name == nullptr)
+					cmp = 0;
+				else
+					cmp = -1;
+			} else
+			{
+				if (y.name == nullptr)
+					cmp = 1;
+				else
+					cmp = std::strcmp(name.get(), y.name.get());
+			}
 
+			return compare(x, cmp);
 		};
 
-		bool compare_phone (condition x, const record& y) const { return compare_int(x, phone, y.phone); }
-		bool compare_group (condition x, const record& y) const { return compare_int(x, group, y.group); }
+		bool compare_phone (condition x, const record& y) const { return compare(x, phone - y.phone); }
+		bool compare_group (condition x, const record& y) const { return compare(x, group - y.group); }
 
-		void print (FILE *fp = stdout) { fprintf (fp, "%s %d %d\n\n", name, phone, group); }
+		void print (FILE *fp = stdout) const { fprintf (fp, "%s %d %d\n\n", name.get(), phone, group); }
 		
-		io_status read (FILE *fp = stdin);
+		io_status read (FILE *fp = stdin)
 		{
 			char buf[LEN];
 			name = nullptr;
@@ -66,7 +82,7 @@ class record
 			{
 				if (feof(fp))
 					return io_status::eof;
-				return io_status:format;
+				return io_status::format;
 			}
 
 			if (init (buf, phone, group))
@@ -75,24 +91,24 @@ class record
 			return io_status::success;
 		}
 	private:
-		static bool compare_int (condition x, int x, int y)
+		static bool compare (condition x, int cmp)
 		{
-			switch (condition)
+			switch (x)
 			{
 				case condition::none:
 					return true;
 				case condition::eq:
-					return x == y;
+					return cmp == 0;
 				case condition::ne:
-					return x != y;
+					return cmp != 0;
 				case condition::lt:
-					return x < y;
+					return cmp < 0;
 				case condition::gt:
-					return x > y;
+					return cmp > 0;
 				case condition::le:
-					return x <= y;
+					return cmp <= 0;
 				case condition::ge:
-					return x >= y;
+					return cmp >= 0;
 				case condition::like:
 					return false;
 			}
@@ -100,3 +116,6 @@ class record
 			return false;
 		}
 };
+
+#endif // RECORD_H
+

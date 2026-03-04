@@ -1,71 +1,38 @@
 #include "solve.h"
 
-io_status write_sentence_with_right_out (FILE *in, FILE *out, pattern *mister_x, const char *t, int *res)
+
+io_status start_db (const list2<record> *db)
 {
-	char word[LEN] = {},
-		 buffer[LEN] = {};
+	char buf[LEN] = {};
 
-	*res = 0;
-
-	while (fgets(buffer, LEN, in) != nullptr)
+	while (fgets(buf, LEN, stdin))
 	{
-		int len = 0;
-
-		// Идём по строке
-		for (len = 0 ; buffer[len] != '\0' ; len++)
-			word[len] = buffer[len];
-
-		if (word[len - 1] == '\n')
-			word[len - 1] = '\0';
-
-		char *saveptr = nullptr,
-			 *token = word;
-
-		while ((token = strtok_r(token, t, &saveptr)))
-		{
-			if (mister_x->with_out(token, 0, 0))
-			{
-				fprintf(out, "%s", buffer);
-				(*res)++;
-				break;
-			}
-
-			token = nullptr;
-		}
+		
 	}
 
-	if (feof(in) == 0)
+	if (feof(stdin) == 0)
 		return io_status::read;
 
 	return io_status::success;
 }
 
-io_status solve (char *filename, int const *r)
+
+io_status solve (char *filename, int *r)
 {
-	auto mister_x = std::make_unique<pattern>();
-    if (mister_x == nullptr)
+	auto shai_hulud = std::make_unique<list2<record>>();
+    if (shai_hulud == nullptr)
 		return io_status::memory;
 
-	io_status ret = mister_x->read(s);
+	io_status ret = shai_hulud->read_file(filename);
 	if (ret != io_status::success)
 		return ret;
 
-	FILE *in, *out;
+	shai_hulud->print();
 
-	if ((in = fopen(f_in, "r")) == nullptr)
-		return io_status::open;
+	(*r) = 0;
 
-	if ((out = fopen(f_out, "w")) == nullptr)
-	{
-		fclose(in);
-		return io_status::open;
-	}
-
-	ret = write_sentence_with_right_out(in, out, mister_x.get(), t, r);
+	ret = io_status::success;
 	
-	fclose(in);
-	fclose(out);
-
 	return ret;
 }
 
