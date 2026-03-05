@@ -1,7 +1,9 @@
 #ifndef LIST_H
 #define LIST_H
 
+#include "io_status.h"
 #include "list_node.h"
+#include "command.h"
 
 #include <cstdio>
 #include <new>
@@ -110,6 +112,13 @@ class list2
 				curr->print(fp);
 				i++;
 			}
+		}
+
+		void print_valid (command& x, FILE *fp = stdout) const
+		{
+			for (auto *curr = head ; curr ; curr = curr->next)
+				if (x.apply(curr))
+					curr->print(fp);
 		}
 
 		int get_length () const

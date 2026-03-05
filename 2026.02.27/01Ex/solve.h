@@ -10,6 +10,7 @@
 #include <cstdio>
 #include <cstring>
 
+io_status start_db (const list2<record> *db);
 io_status solve (char *filename, int *r);
 
 #endif // SOLVE_H

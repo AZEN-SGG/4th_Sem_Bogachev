@@ -141,7 +141,7 @@ class pattern : virtual public name_t
 			return 1;
 		}
 	private:
-		int is_many (const char *str, int i_word, int i_bord)
+		int is_many (const char *str, int i_word, int i_bord) const
 		{
 			int len = 0;
 
@@ -155,13 +155,13 @@ class pattern : virtual public name_t
 			return 0;
 		}
 
-		int is_in (const char *str, int str_i, int bord_i)
+		int is_in (const char *str, int str_i, int bord_i) const
 		{
 			return ((str[str_i] >= span[bord_i].start) &&
 					(str[str_i] <= span[bord_i].end));
 		}
 
-		int is_out (const char *str, int str_i, int bord_i)
+		int is_out (const char *str, int str_i, int bord_i) const
 		{
 			return ((str[str_i] < span[bord_i].start) ||
 					(str[str_i] > span[bord_i].end));

@@ -10,6 +10,8 @@ io_status start_db (const list2<record> *db)
 	{
 		if (!x.parse(buf))
 			return io_status::format;
+
+		db->print_valid(x, stdout);
 	}
 
 	if (feof(stdin) == 0)

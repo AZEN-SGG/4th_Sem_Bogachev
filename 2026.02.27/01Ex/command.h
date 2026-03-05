@@ -213,7 +213,20 @@ class command : public record, public pattern
 
 		bool apply (const record& x) const
 		{
+			bool res = false;
+			if (c_group != condition::none)
+				res = compare_group(c_group, x);
+			else if (c_phone != condition::none)
+				res = compare_phone(c_phone, x);
+			else if (c_name != condition::none)
+			{
+				if (c_name == condition::like)
+					res = is_valid(x.get_word(), 0, 0);
+				else
+					res = compare_word(c_name, x);
+			}
 
+			return res;
 		}
 };
 
