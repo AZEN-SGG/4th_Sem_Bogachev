@@ -4,10 +4,12 @@
 io_status start_db (const list2<record> *db)
 {
 	char buf[LEN] = {};
+	command x;
 
 	while (fgets(buf, LEN, stdin))
 	{
-		
+		if (!x.parse(buf))
+			return io_status::format;
 	}
 
 	if (feof(stdin) == 0)

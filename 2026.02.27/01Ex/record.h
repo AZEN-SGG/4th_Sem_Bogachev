@@ -3,6 +3,7 @@
 
 #include "io_status.h"
 #include "condition.h"
+#include "pattern.h"
 
 #include <memory>
 #include <cstdio>
@@ -10,17 +11,16 @@
 
 #define LEN 1234
 
-class record
+class record : virtual public name_t
 {
-	private:
-		std::unique_ptr<char []> name = nullptr;
+	protected:
 		int phone = 0;
 		int group = 0;
 	public:
 		record () = default;
 		~record () = default;
 
-		const char * get_name () const { return name.get(); }
+		const char * get_word () const { return word.get(); }
 		int get_phone () const { return phone; }
 		int get_group () const { return group; }
 
@@ -31,10 +31,10 @@ class record
 
 			if (n)
 			{
-				name = std::make_unique<char []> (std::strlen(n) + 1);
-				if (!name)
+				word = std::make_unique<char []> (std::strlen(n) + 1);
+				if (!word)
 					return -1;
-				std::strcpy(name.get(), n);
+				std::strcpy(word.get(), n);
 			} else
 				n = nullptr;
 
@@ -47,22 +47,22 @@ class record
 		record& operator= (record&& x) = default;
 		record& operator= (const record& x) = delete;
 
-		bool compare_name (condition x, const record& y) const
+		bool compare_word (condition x, const record& y) const
 		{
 			int cmp = 0;
 			
-			if (name == nullptr)
+			if (word == nullptr)
 			{
-				if (y.name == nullptr)
+				if (y.word == nullptr)
 					cmp = 0;
 				else
 					cmp = -1;
 			} else
 			{
-				if (y.name == nullptr)
+				if (y.word == nullptr)
 					cmp = 1;
 				else
-					cmp = std::strcmp(name.get(), y.name.get());
+					cmp = std::strcmp(word.get(), y.word.get());
 			}
 
 			return compare(x, cmp);
@@ -71,12 +71,12 @@ class record
 		bool compare_phone (condition x, const record& y) const { return compare(x, phone - y.phone); }
 		bool compare_group (condition x, const record& y) const { return compare(x, group - y.group); }
 
-		void print (FILE *fp = stdout) const { fprintf (fp, "%s %d %d\n\n", name.get(), phone, group); }
+		void print (FILE *fp = stdout) const { fprintf (fp, "%s %d %d\n\n", word.get(), phone, group); }
 		
 		io_status read (FILE *fp = stdin)
 		{
 			char buf[LEN];
-			name = nullptr;
+			word = nullptr;
 
 			if (fscanf(fp, "%s%d%d", buf, &phone, &group) != 3)
 			{

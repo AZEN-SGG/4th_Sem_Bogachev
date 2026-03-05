@@ -8,6 +8,12 @@
 
 #define LEN 1234
 
+class name_t
+{
+	protected:
+		std::unique_ptr<char[]> word;
+};
+
 enum class type_pattern
 {
 	none,
@@ -23,10 +29,9 @@ struct borders
 	char end;
 };
 
-class pattern
+class pattern : virtual public name_t
 {
 	private:
-		std::unique_ptr<char[]> word;
 		std::unique_ptr<borders[]> span;
 		std::unique_ptr<type_pattern[]> spec;
 	public:
@@ -34,7 +39,7 @@ class pattern
 		type_pattern * get_spec () const { return spec.get(); }
 		borders * get_span () const { return span.get(); }
 	
-		io_status read (char *str)
+		io_status read_word (char *str)
 		{
 			io_status ret;
 			int len = 0, b_len = 0;
