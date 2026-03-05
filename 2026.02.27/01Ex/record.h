@@ -36,7 +36,7 @@ class record : virtual public name_t
 					return -1;
 				std::strcpy(word.get(), n);
 			} else
-				n = nullptr;
+				word = nullptr;
 
 			return 0;
 		}

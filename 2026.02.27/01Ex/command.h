@@ -222,15 +222,15 @@ class command : public record, public pattern
 		{
 			bool res = false;
 			if (c_group != condition::none)
-				res = compare_group(c_group, x);
+				res = x.compare_group(c_group, *this);
 			else if (c_phone != condition::none)
-				res = compare_phone(c_phone, x);
+				res = x.compare_phone(c_phone, *this);
 			else if (c_name != condition::none)
 			{
 				if (c_name == condition::like)
 					res = is_valid(x.get_word(), 0, 0);
 				else
-					res = compare_word(c_name, x);
+					res = x.compare_word(c_name, *this);
 			}
 
 			return res;
