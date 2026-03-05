@@ -41,10 +41,28 @@ class record : virtual public name_t
 			return 0;
 		}
 
-		record (record&& x) = default;
+		record (record&& x) noexcept : name_t(std::move(x))
+		{
+			phone = x.phone;
+			group = x.group;
+
+			x.phone = 0;
+			x.group = 0;
+		}
 		record (const record& x) = delete;
 
-		record& operator= (record&& x) = default;
+		record& operator=(record&& x) noexcept
+		{
+			if (this != &x)
+			{
+				name_t::operator=(std::move(x));
+				phone = x.phone;
+				group = x.group;
+				x.phone = 0;
+				x.group = 0;
+			}
+			return *this;
+		}
 		record& operator= (const record& x) = delete;
 
 		bool compare_word (condition x, const record& y) const
@@ -71,7 +89,7 @@ class record : virtual public name_t
 		bool compare_phone (condition x, const record& y) const { return compare(x, phone - y.phone); }
 		bool compare_group (condition x, const record& y) const { return compare(x, group - y.group); }
 
-		void print (FILE *fp = stdout) const { fprintf (fp, "%s %d %d\n\n", word.get(), phone, group); }
+		void print (FILE *fp = stdout) const { fprintf (fp, "%s %d %d\n", word.get(), phone, group); }
 		
 		io_status read (FILE *fp = stdin)
 		{
@@ -89,6 +107,12 @@ class record : virtual public name_t
 				return io_status::memory;
 
 			return io_status::success;
+		}
+	protected:
+		void erase ()
+		{
+			name_t::erase();
+			phone = group = 0;
 		}
 	private:
 		static bool compare (condition x, int cmp)

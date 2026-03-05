@@ -1,20 +1,25 @@
 #include "solve.h"
+#include <cstdio>
 
 
-io_status start_db (const list2<record> *db)
+io_status start_db (const list2<record> *db, int *res)
 {
 	char buf[LEN] = {};
 	command x;
+	FILE *f_out = stdout,
+		 *f_in = stdin;
 
-	while (fgets(buf, LEN, stdin))
+	(*res) = 0;
+
+	while (fgets(buf, LEN, f_in))
 	{
 		if (!x.parse(buf))
-			return io_status::format;
-
-		db->print_valid(x, stdout);
+			fprintf(f_out, "Wrong format of request!\n\n");
+		else
+			(*res) += db->print_valid(x, f_out);
 	}
 
-	if (feof(stdin) == 0)
+	if (feof(f_in) == 0)
 		return io_status::read;
 
 	return io_status::success;
@@ -31,11 +36,7 @@ io_status solve (char *filename, int *r)
 	if (ret != io_status::success)
 		return ret;
 
-	shai_hulud->print();
-
-	(*r) = 0;
-
-	ret = io_status::success;
+	ret = start_db(shai_hulud.get(), r);
 	
 	return ret;
 }

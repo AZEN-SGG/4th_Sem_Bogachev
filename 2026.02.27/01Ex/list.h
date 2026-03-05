@@ -114,11 +114,18 @@ class list2
 			}
 		}
 
-		void print_valid (command& x, FILE *fp = stdout) const
+		int print_valid (command& x, FILE *fp = stdout) const
 		{
+			int count = 0;
 			for (auto *curr = head ; curr ; curr = curr->next)
-				if (x.apply(curr))
+				if (x.apply(*curr))
+				{
 					curr->print(fp);
+					++count;
+				}
+
+			fprintf(fp, "\n");
+			return count;
 		}
 
 		int get_length () const

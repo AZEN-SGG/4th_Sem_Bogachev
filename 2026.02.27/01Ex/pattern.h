@@ -12,6 +12,8 @@ class name_t
 {
 	protected:
 		std::unique_ptr<char[]> word;
+
+		void erase () { word.reset(); }
 };
 
 enum class type_pattern
@@ -272,6 +274,13 @@ class pattern : virtual public name_t
 			(*p_len) = len - back;
 
 			return io_status::success;
+		}
+	protected:
+		void erase ()
+		{
+			name_t::erase();
+			span.reset();
+			spec.reset();
 		}
 };
 

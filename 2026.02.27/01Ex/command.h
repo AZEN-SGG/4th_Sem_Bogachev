@@ -28,11 +28,12 @@ class command : public record, public pattern
 
 		bool parse (char *string)
 		{
-			char *field, *oper, *value;
-			if (sscanf(string, "%s%s%s", &field, &oper, &value) != 3)
+			erase();
+
+			char field[LEN] = {}, oper[LEN] = {}, value[LEN] = {};
+			if (sscanf(string, "%s%s%s", field, oper, value) != 3)
 				return false;
 
-			int index = 0;
 			switch (field[0])
 			{
 				case 'n':
@@ -82,10 +83,13 @@ class command : public record, public pattern
 			{
 				case condition::none:
 					res = false;
+					break;
 				case condition::like:
 					res = false;
+					break;
 				default:
 					res = (sscanf(value, "%d", &phone) == 1);
+					break;
 			}
 
 			return res;
@@ -104,10 +108,13 @@ class command : public record, public pattern
 			{
 				case condition::none:
 					res = false;
+					break;
 				case condition::like:
 					res = false;
+					break;
 				default:
 					res = (sscanf(value, "%d", &group) == 1);
+					break;
 			}
 
 			return res;
@@ -143,7 +150,7 @@ class command : public record, public pattern
 					return false;
 			} else if (oper[0] == '<' && oper[1] == '>')
 				cond = condition::ne;
-			else if (std::strcmp(oper, "like", 5) == 0)
+			else if (std::strncmp(oper, "like", 5) == 0)
 				cond = condition::like;
 			else
 				return false;
@@ -177,7 +184,7 @@ class command : public record, public pattern
 				cond = c_phone;
 			} else if (c_name != condition::none)
 			{
-				fprintf(fp, "%s", word);
+				fprintf(fp, "%s", word.get());
 				cond = c_name;
 			} else
 				fprintf(fp, "none");
@@ -227,6 +234,16 @@ class command : public record, public pattern
 			}
 
 			return res;
+		}
+	protected:
+		void erase ()
+		{
+			record::erase();
+			pattern::erase();
+
+			c_name 	= condition::none;
+			c_phone	= condition::none;
+			c_group	= condition::none;
 		}
 };
 
