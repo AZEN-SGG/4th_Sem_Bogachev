@@ -11,6 +11,7 @@ enum class condition
 	le,
 	ge,
 	like,
+	nlike,
 };
 
 #endif // CONDITION_H

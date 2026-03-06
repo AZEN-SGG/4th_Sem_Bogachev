@@ -3,7 +3,7 @@
 
 #include "io_status.h"
 #include "list_node.h"
-#include "command.h"
+#include "request.h"
 
 #include <cstdio>
 #include <new>
@@ -114,13 +114,13 @@ class list2
 			}
 		}
 
-		int print_valid (command& x, FILE *fp = stdout) const
+		int print_valid (request& x, FILE *fp = stdout) const
 		{
 			int count = 0;
 			for (auto *curr = head ; curr ; curr = curr->next)
 				if (x.apply(*curr))
 				{
-					curr->print(fp);
+					curr->print(x.order.get(), fp);
 					++count;
 				}
 

@@ -1,11 +1,13 @@
 #include "solve.h"
-#include <cstdio>
+#include "io_status.h"
+#include "request.h"
 
 
 io_status start_db (const list2<record> *db, int *res)
 {
+	io_status ret;
 	char buf[LEN] = {};
-	command x;
+	request x;
 	FILE *f_out = stdout,
 		 *f_in = stdin;
 
@@ -13,8 +15,10 @@ io_status start_db (const list2<record> *db, int *res)
 
 	while (fgets(buf, LEN, f_in))
 	{
-		if (!x.parse(buf))
+		if ((ret = x.parse(buf)) == io_status::format)
 			fprintf(f_out, "Wrong format of request!\n\n");
+		else if (ret != io_status::success)
+			return ret;
 		else
 			(*res) += db->print_valid(x, f_out);
 	}

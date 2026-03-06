@@ -2,11 +2,13 @@
 #define COMMAND_H
 
 #include "condition.h"
+#include "operation.h"
 #include "record.h"
 #include "pattern.h"
 
 #include <cstdio>
 
+class request;
 
 enum class fields_t
 {
@@ -22,9 +24,30 @@ class command : public record, public pattern
 		condition c_name	= condition::none;
 		condition c_phone	= condition::none;
 		condition c_group	= condition::none;
+		operation op		= operation::none;
 	public:
 		command () = default;
 		~command () = default;
+
+		command& operator= (command&& x)
+		{
+			if (this == &x)
+				return (*this);
+
+			record::operator=(std::move(x));
+			x.name_t::operator=(std::move(*this));
+			pattern::operator=(std::move(x));
+
+			c_name = x.c_name;
+			c_phone = x.c_phone;
+			c_group = x.c_group;
+			op = x.op;
+
+			x.erase();
+
+			return (*this);
+		}
+		command& operator= (const command& x) = delete;
 
 		bool parse (char *string)
 		{
@@ -235,6 +258,8 @@ class command : public record, public pattern
 
 			return res;
 		}
+
+		friend class request;
 	protected:
 		void erase ()
 		{
@@ -244,6 +269,7 @@ class command : public record, public pattern
 			c_name 	= condition::none;
 			c_phone	= condition::none;
 			c_group	= condition::none;
+			op = operation::none;
 		}
 };
 

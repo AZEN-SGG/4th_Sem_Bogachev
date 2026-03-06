@@ -3,6 +3,7 @@
 
 #include "io_status.h"
 #include "condition.h"
+#include "ordering.h"
 #include "pattern.h"
 
 #include <memory>
@@ -51,7 +52,7 @@ class record : virtual public name_t
 		}
 		record (const record& x) = delete;
 
-		record& operator=(record&& x) noexcept
+		record& operator= (record&& x) noexcept
 		{
 			if (this != &x)
 			{
@@ -89,7 +90,31 @@ class record : virtual public name_t
 		bool compare_phone (condition x, const record& y) const { return compare(x, phone - y.phone); }
 		bool compare_group (condition x, const record& y) const { return compare(x, group - y.group); }
 
-		void print (FILE *fp = stdout) const { fprintf (fp, "%s %d %d\n", word.get(), phone, group); }
+		void print (const ordering *order, FILE *fp = stdout) const
+		{
+			const ordering default_ordering[ORDERING_LEN] = {ordering::name, ordering::phone, ordering::group};
+			const ordering *p = (order ? order : default_ordering);
+
+			for (int i = 0 ; i < ORDERING_LEN ; ++i)
+			{
+				switch (p[i])
+				{
+					case ordering::name:
+						printf(" %s", word.get());
+						break;
+					case ordering::phone:
+						printf(" %d", phone);
+						break;
+					case ordering::group:
+						printf(" %d", group);
+						break;
+					case ordering::none:
+						continue;
+				}
+
+				fprintf(fp, "\n");
+			}
+		}
 		
 		io_status read (FILE *fp = stdin)
 		{
@@ -134,6 +159,8 @@ class record : virtual public name_t
 				case condition::ge:
 					return cmp >= 0;
 				case condition::like:
+					return false;
+				case condition::nlike:
 					return false;
 			}
 

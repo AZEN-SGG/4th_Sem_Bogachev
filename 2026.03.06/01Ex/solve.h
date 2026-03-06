@@ -2,7 +2,7 @@
 #define SOLVE_H
 
 #include "record.h"
-#include "command.h"
+#include "request.h"
 #include "list.h"
 #include "io_status.h"
 
