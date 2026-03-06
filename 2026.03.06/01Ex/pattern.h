@@ -62,6 +62,8 @@ class pattern : virtual public name_t
 				spec[i] = p_buf[i];
 			}
 
+			word[len] = '\0';
+
 			for (int i = 0 ; i < b_len ; ++i)
 				span[i] = b_buf[i];
 

@@ -53,18 +53,37 @@ class command : public record, public pattern
 		{
 			erase();
 
-			char field[LEN] = {}, oper[LEN] = {}, value[LEN] = {};
-			if (sscanf(string, "%s%s%s", field, oper, value) != 3)
+			char field[LEN] = {}, negation[LEN] = {}, oper[LEN] = {}, value[LEN] = {};
+			int n = sscanf(string, "%s%s%s%s", field, negation, oper, value);
+			if (n != 3 && n != 4)
+				return false;
+
+			if ((n == 4) && std::strncmp(negation, "not", 4) == 0)
+			{
+				if (std::strncmp(oper, "like", 5) == 0)
+				{
+					if (std::strncmp(field, "name", 5) != 0)
+						return false;
+
+					if (read_word(value) != io_status::success)
+						return false;
+
+					c_name = condition::nlike;
+					
+					return true;
+				} else
+					return false;
+			} else if (n == 4)
 				return false;
 
 			switch (field[0])
 			{
 				case 'n':
-					return parse_name(field, oper, value);
+					return parse_name(field, negation, oper);
 				case 'p':
-					return parse_phone(field, oper, value);
+					return parse_phone(field, negation, oper);
 				case 'g':
-					return parse_group(field, oper, value);
+					return parse_group(field, negation, oper);
 				default:
 					return false;
 			}
@@ -238,6 +257,9 @@ class command : public record, public pattern
 				case condition::like:
 					fprintf(fp, " like\n\n");
 					break;
+				case condition::nlike:
+					fprintf(fp, " not like\n\n");
+					break;
 			}
 		}
 
@@ -252,6 +274,8 @@ class command : public record, public pattern
 			{
 				if (c_name == condition::like)
 					res = is_valid(x.get_word(), 0, 0);
+				else if (c_name == condition::nlike)
+					res = !is_valid(x.get_word(), 0, 0);
 				else
 					res = x.compare_word(c_name, *this);
 			}

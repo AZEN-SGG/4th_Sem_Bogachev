@@ -183,6 +183,9 @@ class request
 				cmd = nullptr;
 			}
 
+			for (int i = len ; i < ORDERING_LEN ; ++i)
+				order[i] = ordering::none;
+
 			return io_status::success;
 		}
 
@@ -229,7 +232,7 @@ class request
 			return flag;
 		}
 
-		friend class list2<request>;
+		friend class list2<record>;
 	private:
 		void erase ()
 		{

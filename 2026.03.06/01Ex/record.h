@@ -100,20 +100,20 @@ class record : virtual public name_t
 				switch (p[i])
 				{
 					case ordering::name:
-						printf(" %s", word.get());
+						fprintf(fp, " %s", word.get());
 						break;
 					case ordering::phone:
-						printf(" %d", phone);
+						fprintf(fp, " %d", phone);
 						break;
 					case ordering::group:
-						printf(" %d", group);
+						fprintf(fp, " %d", group);
 						break;
 					case ordering::none:
 						continue;
 				}
-
-				fprintf(fp, "\n");
 			}
+			
+			fprintf(fp, "\n");
 		}
 		
 		io_status read (FILE *fp = stdin)
