@@ -34,10 +34,12 @@ class command : public record, public pattern
 			if (this == &x)
 				return (*this);
 
-			record::operator=(std::move(x));
-			x.name_t::operator=(std::move(*this));
-			pattern::operator=(std::move(x));
-
+			word = std::move(x.word);
+			span = std::move(x.span);
+			spec = std::move(x.spec);
+			group = x.group;
+			phone = x.phone;
+			
 			c_name = x.c_name;
 			c_phone = x.c_phone;
 			c_group = x.c_group;

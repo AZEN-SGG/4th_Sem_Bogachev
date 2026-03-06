@@ -120,7 +120,7 @@ class list2
 			for (auto *curr = head ; curr ; curr = curr->next)
 				if (x.apply(*curr))
 				{
-					curr->print(x.order.get(), fp);
+					curr->print(fp, x.order.get());
 					++count;
 				}
 

@@ -33,10 +33,28 @@ struct borders
 
 class pattern : virtual public name_t
 {
-	private:
+	protected:
 		std::unique_ptr<borders[]> span;
 		std::unique_ptr<type_pattern[]> spec;
 	public:
+		pattern() = default;
+		~pattern() = default;
+
+		pattern(const pattern&) = delete;
+
+		pattern& operator= (pattern&& x)
+		{
+			if (this == &x)
+				return (*this);
+
+			word = std::move(x.word);
+			span = std::move(x.span);
+			spec = std::move(x.spec);
+
+			return (*this);
+		}
+		pattern& operator= (const pattern& x) = delete;
+
 		char * get_word () const { return word.get(); }
 		type_pattern * get_spec () const { return spec.get(); }
 		borders * get_span () const { return span.get(); }

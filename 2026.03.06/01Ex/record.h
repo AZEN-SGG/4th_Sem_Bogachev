@@ -90,7 +90,7 @@ class record : virtual public name_t
 		bool compare_phone (condition x, const record& y) const { return compare(x, phone - y.phone); }
 		bool compare_group (condition x, const record& y) const { return compare(x, group - y.group); }
 
-		void print (const ordering *order, FILE *fp = stdout) const
+		void print (FILE *fp = stdout, const ordering *order = nullptr) const
 		{
 			const ordering default_ordering[ORDERING_LEN] = {ordering::name, ordering::phone, ordering::group};
 			const ordering *p = (order ? order : default_ordering);
