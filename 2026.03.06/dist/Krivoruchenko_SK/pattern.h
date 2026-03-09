@@ -11,7 +11,7 @@
 class name_t
 {
 	protected:
-		std::unique_ptr<char[]> word;
+		std::unique_ptr<char[]> word = nullptr;
 
 		void erase () { word.reset(); }
 };
@@ -34,8 +34,8 @@ struct borders
 class pattern : virtual public name_t
 {
 	protected:
-		std::unique_ptr<borders[]> span;
-		std::unique_ptr<type_pattern[]> spec;
+		std::unique_ptr<borders[]> span = nullptr;
+		std::unique_ptr<type_pattern[]> spec = nullptr;
 	public:
 		pattern() = default;
 		~pattern() = default;

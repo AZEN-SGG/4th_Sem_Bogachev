@@ -1,0 +1,56 @@
+#include <cstdio>
+#include <ctime>
+
+#include "io_status.h"
+#include "solve.h"
+
+template<>
+unsigned int list2<record>::r = -1;
+
+int main(int argc, char * argv[])
+{
+    int res = 0;
+	io_status ret;
+    double t;
+	
+    if (!(argc == 2)
+	) {
+        fprintf(stderr, "Usage: %s filename\n", argv[0]);
+        return 1;
+    }
+
+    t = clock();
+	ret = solve(argv[1], &res);
+    t = (clock() - t) / CLOCKS_PER_SEC;
+
+	do {
+		switch (ret)
+		{
+			case io_status::success:
+				continue;
+			case io_status::open:
+				fprintf (stderr, "Error: Cannot open file\n");
+				break;
+			case io_status::read:
+				fprintf (stderr, "Error: While reading of file %s\n", argv[1]);
+				break;
+			case io_status::format:
+				fprintf (stderr, "Error: Wrong format of file %s\n", argv[1]);
+				break;
+			case io_status::eof:
+				fprintf (stderr, "Error: End of file %s\n", argv[1]);
+				break;
+			case io_status::memory:
+				fprintf (stderr, "Error: MEMORY\n");
+				break;
+			case io_status::create:
+				fprintf (stderr, "Error: Create, how is it possible?!\n"); // it is impossible...
+				break;
+		}
+
+		return 3;
+	} while (0);
+
+	fprintf(stdout, "%s : Result = %d Elapsed = %.2f\n", argv[0], res, t);
+    return 0;
+}
