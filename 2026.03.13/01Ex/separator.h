@@ -21,7 +21,7 @@ class separator
 
 		static bool contains (char c) {	return ch_[static_cast<unsigned char>(c)]; }
 
-		char * skip_spaces (char *str)
+		static char * skip_spaces (char *str)
 		{
 			int i = 0;
 			for (; str[i] || ch_[(unsigned int)str[i]] ; ++i);

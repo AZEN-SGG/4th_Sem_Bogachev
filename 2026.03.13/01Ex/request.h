@@ -5,7 +5,6 @@
 #include "operation.h"
 #include "ordering.h"
 #include "command.h"
-#include "command_type.h"
 
 #include <cstring>
 #include <utility>
@@ -23,7 +22,6 @@ class request
 		std::unique_ptr<command[]>	commands	= nullptr;
 		std::unique_ptr<ordering[]>	order		= nullptr;
 		std::unique_ptr<ordering[]> order_by	= nullptr;
-		command_type type	= command_type::none;
 		int len_c			= 0;
 	public:
 		request()	= default;
@@ -75,94 +73,8 @@ class request
 				commands[i].print(fp);
 		}
 
-		char * parse_command(char *cmd)
-		{
-			cmd = skip_spaces(cmd, " \t");
-			
-			switch (cmd[0])
-			{
-				case 'q':
-					if ((cmd = strstr(cmd, "quit")) != nullptr)
-					{
-						cmd += 4;
-						type = command_type::quit;
-					}
-					break;
-				case 'i':
-					if ((cmd = strstr(cmd, "insert")) != nullptr)
-					{
-						cmd += 6;
-						type = command_type::insert;
-					}
-					break;
-				case 's':
-					if ((cmd = strstr(cmd, "select")) != nullptr)
-					{
-						cmd += 6;
-						type = command_type::select;
-					}
-					break;
-				case 'd':
-					if ((cmd = strstr(cmd, "delete")) != nullptr)
-					{
-						cmd += 6;
-						type = command_type::del;
-					}
-					break;
-			}
 
-			return cmd;
-		}
 
-		io_status parse_insert (char *cmd)
-		{
-			char buf[LEN] = {};
-			if (sscanf(cmd, "(%s,%d,%d)", buf, &commands[0].phone, &commands[0].group) != 3)
-				return io_status::format;
-
-			commands[0].word = std::make_unique<char[]>(strlen(buf));
-
-			int i = 0;
-			for (; buf[i] != '\0' ; ++i)
-				commands[0].word[i] = buf[i];
-			commands[0].word[i] = '\0';
-
-			return io_status::success;
-		}
-
-		io_status parse_select (char *cmd)
-		{
-			io_status ret;
-			char *where = nullptr,
-				 *in_order = nullptr;
-			if ((where = std::strstr(cmd, " where ")) != nullptr)
-			{
-				where[0] = '\0';
-				where += 7;
-
-				if ((in_order = std::strstr(where, " order_by ")) != nullptr)
-				{
-					in_order[0] = '\0';
-					in_order += 10;
-					if ((ret = parse_order(in_order)) != io_status::success)
-						return ret;
-				}
-
-				if ((ret = parse_operations(where)) != io_status::success)
-					return ret;
-			} else if ((in_order = std::strstr(cmd, " order_by ")) != nullptr)
-			{
-				in_order[0] = '\0';
-				in_order += 10;
-				if ((ret = parse_order(in_order)) != io_status::success)
-					return ret;
-			}
-
-			if ((ret = parse_output(cmd)) != io_status::success)
-				return ret;
-
-			return io_status::success;
-		}
 
 		io_status parse_operations (char *cmd)
 		{
@@ -247,90 +159,7 @@ class request
 			return io_status::success;
 		}
 
-		io_status parse_output (char *cmd)
-		{
-			char *saveptr = nullptr;
-//			order.reset();
 
-			if (cmd[0] == '*' && cmd[1] == '\0')
-				return io_status::success;
-
-//			order = std::make_unique<ordering[]>(ORDERING_LEN);
-			if (order == nullptr)
-				return io_status::memory;
-
-			int len = 0;
-			while ((cmd = strtok_r(cmd, ", ", &saveptr)) && (len < ORDERING_LEN))
-			{
-				switch (cmd[0])
-				{
-					case 'n':
-						if (strncmp(cmd, "name", 5) == 0)
-							order[len] = ordering::name;
-						break;
-					case 'p':
-						if (strncmp(cmd, "phone", 6) == 0)
-							order[len] = ordering::phone;
-						break;
-					case 'g':
-						if (strncmp(cmd, "group", 6) == 0)
-							order[len] = ordering::group;
-						break;
-					default:
-						return io_status::format;
-				}
-
-				len++;
-				cmd = nullptr;
-			}
-
-			for (int i = len ; i < ORDERING_LEN ; ++i)
-				order[i] = ordering::none;
-
-			return io_status::success;
-		}
-
-		io_status parse (char *cmd)
-		{
-			io_status ret;
-			char *ops;
-			cmd = parse_command(cmd);
-			switch (type)
-			{
-				case command_type::insert:
-					ret = parse_insert(cmd);
-					break;
-				case command_type::select:
-					ret = parse_select(cmd);
-					break;
-				case command_type::del:
-					ret = parse_delete(cmd);
-					break;
-				case command_type::quit:
-					ret = io_status::success;
-					break;
-				case command_type::none:
-					ret = io_status::format;
-					break;
-			}
-
-			char *ops = std::strstr(cmd, " where ");
-			if (ops == nullptr)
-				return io_status::format;
-
-			ops[0] = '\0';
-			ops += 7; // add length of " where "
-
-			ret = parse_operations(ops);
-			if (ret != io_status::success)
-				return ret;
-
-			ret = parse_order(cmd);
-			if (ret != io_status::success)
-				return ret;
-
-			return io_status::success;
-		}
 
 		bool apply (const record& x)
 		{

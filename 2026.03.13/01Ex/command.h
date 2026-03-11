@@ -1,13 +1,17 @@
 #ifndef COMMAND_H
 #define COMMAND_H
 
+#include "io_status.h"
+#include "ordering.h"
 #include "separator.h"
-#include "parse_status.h"
 #include "condition.h"
 #include "operation.h"
+#include "command_type.h"
+
 #include "record.h"
 #include "pattern.h"
 
+#include <algorithm>
 #include <cstdio>
 
 class request;
@@ -19,15 +23,18 @@ enum class fields_t
 	group,
 };
 
-
 class command : public record, public pattern
 {
 	private:
+		static const int len_command = 3;
+		static const int max_items = 3;
+		command_type type	= command_type::none;
 		condition c_name	= condition::none;
 		condition c_phone	= condition::none;
 		condition c_group	= condition::none;
 		operation op		= operation::none;
-		static const int len_command = 3;
+		ordering order[max_items] = {};
+		ordering order_by[max_items] = {};
 	public:
 		command () = default;
 		~command () = default;
@@ -53,6 +60,199 @@ class command : public record, public pattern
 			return (*this);
 		}
 		command& operator= (const command& x) = delete;
+
+		io_status parse (char *cmd)
+		{
+			io_status ret;
+			char *ops;
+			cmd = parse_command(cmd);
+			switch (type)
+			{
+				case command_type::insert:
+					ret = parse_insert(cmd);
+					break;
+				case command_type::select:
+					ret = parse_select(cmd);
+					break;
+				case command_type::del:
+					ret = parse_delete(cmd);
+					break;
+				case command_type::quit:
+					ret = io_status::success;
+					break;
+				case command_type::none:
+					ret = io_status::format;
+					break;
+			}
+
+			char *ops = std::strstr(cmd, " where ");
+			if (ops == nullptr)
+				return io_status::format;
+
+			ops[0] = '\0';
+			ops += 7; // add length of " where "
+
+			ret = parse_operations(ops);
+			if (ret != io_status::success)
+				return ret;
+
+			ret = parse_order(cmd);
+			if (ret != io_status::success)
+				return ret;
+
+			return ret;
+		}
+
+		char * parse_command(char *cmd)
+		{
+			cmd = separator::skip_spaces(cmd);
+			
+			switch (cmd[0])
+			{
+				case 'q':
+					if ((cmd = strstr(cmd, "quit")) != nullptr)
+					{
+						cmd += 4;
+						type = command_type::quit;
+					}
+					break;
+				case 'i':
+					if ((cmd = strstr(cmd, "insert")) != nullptr)
+					{
+						cmd += 6;
+						type = command_type::insert;
+					}
+					break;
+				case 's':
+					if ((cmd = strstr(cmd, "select")) != nullptr)
+					{
+						cmd += 6;
+						type = command_type::select;
+					}
+					break;
+				case 'd':
+					if ((cmd = strstr(cmd, "delete")) != nullptr)
+					{
+						cmd += 6;
+						type = command_type::del;
+					}
+					break;
+			}
+
+			return cmd;
+		}
+
+		io_status parse_insert (char *cmd)
+		{
+			char buf[LEN] = {};
+			if (sscanf(cmd, "(%s,%d,%d)", buf, &phone, &group) != 3)
+				return io_status::format;
+
+			word = std::make_unique<char[]>(strlen(buf));
+
+			int i = 0;
+			for (; buf[i] != '\0' ; ++i)
+				word[i] = buf[i];
+			word[i] = '\0';
+
+			return io_status::success;
+		}
+
+		io_status parse_select (char *cmd)
+		{
+			io_status ret = io_status::format;
+			char *where = nullptr,
+				 *in_order = nullptr;
+			int len = 0;
+			for (; cmd[len] != '\0' && len < 9 ; ++len);
+			for (; cmd[len] != '\0' ; ++len)
+			{
+				if (
+						(!where) &&
+						separator::contains(cmd[len - 6]) &&
+						cmd[len - 5] == 'w' &&
+						cmd[len - 4] == 'h' &&
+						cmd[len - 3] == 'e' &&
+						cmd[len - 2] == 'r' &&
+						cmd[len - 1] == 'e' &&
+						separator::contains(cmd[len])
+				) {
+					where = cmd + len - 6;
+					where[0] = '\0';
+					where += 7;
+				} else if (
+						separator::contains(cmd[len - 9]) &&
+						cmd[len - 8] == 'o' &&
+						cmd[len - 7] == 'r' &&
+						cmd[len - 6] == 'd' &&
+						cmd[len - 5] == 'e' &&
+						cmd[len - 4] == 'r' &&
+						separator::contains(cmd[len - 3]) &&
+						cmd[len - 2] == 'b' &&
+						cmd[len - 1] == 'y' &&
+						separator::contains(cmd[len])
+				) {
+					in_order = cmd + len - 9;
+					in_order[0] = '\0';
+					in_order += 10;
+
+					if ((ret = parse_order(in_order)) != io_status::success)
+						return ret;
+					break;
+				}
+			}
+
+			if ((ret = parse_output(cmd)) != io_status::success)
+				return ret;
+
+			if (where && (!parse_search_terms(where)))
+				return io_status::format;
+
+			return io_status::success;
+		}
+
+		io_status parse_output (char *cmd)
+		{
+			char *saveptr = nullptr;
+
+			if (cmd[0] == '*' && cmd[1] == '\0')
+			{
+				order[0] = ordering::name;
+				order[1] = ordering::phone;
+				order[2] = ordering::group;
+				return io_status::success;
+			}
+
+			int len = 0;
+			while ((cmd = strtok_r(cmd, ", ", &saveptr)) && (len < max_items))
+			{
+				switch (cmd[0])
+				{
+					case 'n':
+						if (strncmp(cmd, "name", 5) == 0)
+							order[len] = ordering::name;
+						break;
+					case 'p':
+						if (strncmp(cmd, "phone", 6) == 0)
+							order[len] = ordering::phone;
+						break;
+					case 'g':
+						if (strncmp(cmd, "group", 6) == 0)
+							order[len] = ordering::group;
+						break;
+					default:
+						return io_status::format;
+				}
+
+				len++;
+				cmd = nullptr;
+			}
+
+			for (int i = len ; i < max_items; ++i)
+				order[i] = ordering::none;
+
+			return io_status::success;
+		}
 
 		bool parse_search_terms (char *cmd)
 		{

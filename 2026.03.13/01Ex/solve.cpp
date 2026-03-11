@@ -6,25 +6,37 @@
 io_status start_db (const list2<record> *db, int *res)
 {
 	io_status ret;
-	char buf[LEN] = {};
-	request x;
+	int len = 0,
+		symb = 0;
+	char buf[LEN] = {},
+	command x;
 	FILE *f_out = stdout,
 		 *f_in = stdin;
 
-	x.init(3); // Create object with 3 commands max
 	(*res) = 0;
 
-	while (fgets(buf, LEN, f_in))
+	while (((symb = fgetc(f_in)) != EOF) && (len < LEN))
 	{
-		if ((ret = x.parse(buf)) == io_status::format)
-			fprintf(f_out, "Wrong format of request!\n\n");
-		else if (ret != io_status::success)
-			return ret;
-		else
-			(*res) += db->print_valid(x, f_out);
+		if (symb == ';')
+		{
+			if (len == 0)
+				break;
+			buf[len] = '\0';
+			if ((ret = x.parse(buf)) == io_status::format)
+				fprintf(f_out, "Wrong format of request!\n\n");
+			else if (ret != io_status::success)
+				return ret;
+			else
+				(*res) += db->print_valid(x, f_out);
+			len = 0;
+		} else if (symb != '\n' && symb != '\0')
+		{
+			buf[len] = (char)symb;
+			len++;
+		}
 	}
 
-	if (feof(f_in) == 0)
+	if (symb != EOF)
 		return io_status::read;
 
 	return io_status::success;
