@@ -14,9 +14,10 @@ class list2_node : public T
 	private:
 		list2_node * next = nullptr;
 		list2_node * prev = nullptr;
+		list2_node * link = nullptr; // Mini list in class
 	public:
 		list2_node () = default;
-		~list2_node () { next = nullptr; prev = nullptr; }
+		~list2_node () { next = nullptr; prev = nullptr; link = nullptr; }
 
 		list2_node (const list2_node&) = delete;
 		list2_node (list2_node&& r) : T((T&&)r)
@@ -26,6 +27,9 @@ class list2_node : public T
 
 			next = r.next;
 			r.next = nullptr;
+
+			link = r.link;
+			r.link = nullptr;
 		}
 
 		list2_node& operator= (const list2_node&) = delete;
@@ -41,14 +45,20 @@ class list2_node : public T
 
 			next = r.next;
 			r.next = nullptr;
+
+			link = r.link;
+			r.link = nullptr;
+
 			return *this;
 		}
 
 		list2_node * get_next () const { return next; }
 		list2_node * get_prev () const { return prev; }
+		list2_node * get_link () const { return link; }
 
 		void set_next (list2_node *r) { next = r; }
 		void set_prev (list2_node *r) { prev = r; }
+		void set_link (list2_node *r) { link = r; }
 
 		friend class list2<T>;
 };

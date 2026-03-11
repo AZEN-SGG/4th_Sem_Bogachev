@@ -63,8 +63,7 @@ class command : public record, public pattern
 
 		io_status parse (char *cmd)
 		{
-			io_status ret;
-			char *ops;
+			io_status ret = io_status::success;
 			cmd = parse_command(cmd);
 			switch (type)
 			{
@@ -75,7 +74,8 @@ class command : public record, public pattern
 					ret = parse_select(cmd);
 					break;
 				case command_type::del:
-					ret = parse_delete(cmd);
+					if (!parse_delete(cmd))
+						ret = io_status::format;
 					break;
 				case command_type::quit:
 					ret = io_status::success;
@@ -84,21 +84,6 @@ class command : public record, public pattern
 					ret = io_status::format;
 					break;
 			}
-
-			char *ops = std::strstr(cmd, " where ");
-			if (ops == nullptr)
-				return io_status::format;
-
-			ops[0] = '\0';
-			ops += 7; // add length of " where "
-
-			ret = parse_operations(ops);
-			if (ret != io_status::success)
-				return ret;
-
-			ret = parse_order(cmd);
-			if (ret != io_status::success)
-				return ret;
 
 			return ret;
 		}
@@ -210,6 +195,67 @@ class command : public record, public pattern
 
 			return io_status::success;
 		}
+
+		bool parse_delete (char *cmd)
+		{
+			bool ret = true;
+
+			cmd = separator::skip_spaces(cmd);
+			if (
+				cmd[0] == 'w' &&
+				cmd[1] == 'h' &&
+				cmd[2] == 'e' &&
+				cmd[3] == 'r' &&
+				cmd[4] == 'e' &&
+				separator::contains(cmd[5])
+			) {
+				cmd += 6;
+				ret = parse_search_terms(cmd);
+			} else
+			{
+				c_name = condition::none;
+				c_phone = condition::none;
+				c_group = condition::none;
+			}
+
+			return ret;
+		}
+
+		io_status parse_order (char *cmd)
+		{
+			char *saveptr = nullptr;
+
+			int len = 0;
+			while ((cmd = strtok_r(cmd, ", ", &saveptr)) && (len < max_items))
+			{
+				switch (cmd[0])
+				{
+					case 'n':
+						if (strncmp(cmd, "name", 5) == 0)
+							order_by[len] = ordering::name;
+						break;
+					case 'p':
+						if (strncmp(cmd, "phone", 6) == 0)
+							order_by[len] = ordering::phone;
+						break;
+					case 'g':
+						if (strncmp(cmd, "group", 6) == 0)
+							order_by[len] = ordering::group;
+						break;
+					default:
+						return io_status::format;
+				}
+
+				len++;
+				cmd = nullptr;
+			}
+
+			for (int i = len ; i < max_items; ++i)
+				order[i] = ordering::none;
+
+			return io_status::success;
+		}
+
 
 		io_status parse_output (char *cmd)
 		{
@@ -510,6 +556,10 @@ class command : public record, public pattern
 			}
 		}
 
+		bool apply (list2<record>& worm)
+		{
+		}
+
 		bool apply (const record& x) const
 		{
 			bool res = false;
@@ -529,8 +579,6 @@ class command : public record, public pattern
 
 			return res;
 		}
-
-		friend class request;
 	protected:
 		void erase ()
 		{
