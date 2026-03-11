@@ -2,6 +2,7 @@
 #include <ctime>
 
 #include "io_status.h"
+#include "separator.h"
 #include "solve.h"
 
 template<>
@@ -18,6 +19,8 @@ int main(int argc, char * argv[])
         fprintf(stderr, "Usage: %s filename\n", argv[0]);
         return 1;
     }
+
+	separator::init(" \t\n");
 
     t = clock();
 	ret = solve(argv[1], &res);

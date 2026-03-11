@@ -1,6 +1,8 @@
 #ifndef COMMAND_H
 #define COMMAND_H
 
+#include "separator.h"
+#include "parse_status.h"
 #include "condition.h"
 #include "operation.h"
 #include "record.h"
@@ -25,6 +27,7 @@ class command : public record, public pattern
 		condition c_phone	= condition::none;
 		condition c_group	= condition::none;
 		operation op		= operation::none;
+		static const int len_command = 3;
 	public:
 		command () = default;
 		~command () = default;
@@ -51,11 +54,53 @@ class command : public record, public pattern
 		}
 		command& operator= (const command& x) = delete;
 
-		bool parse (char *string)
+		bool parse_search_terms (char *cmd)
 		{
-			erase();
+			int len = 0;
+			for (; cmd[len] != '\0' && len < 4 ; ++len);
+			if (cmd[len] == '\0')
+				return false;
 
-			char field[LEN] = {}, negation[LEN] = {}, oper[LEN] = {}, value[LEN] = {};
+			int len_c = 1;
+			for (; cmd[len] != '\0' && len_c < len_command ; ++len)
+			{
+				if (
+					 separator::contains(cmd[len - 4]) &&
+					 cmd[len - 3] == 'a' &&
+					 cmd[len - 2] == 'n' &&
+					 cmd[len - 1] == 'd' &&
+					 separator::contains(cmd[len])
+				) {
+					len_c++;
+					op = operation::land;
+					cmd[len - 4] = '\0';
+					if (!parse_search_term(cmd))
+						return false;
+					cmd += len;
+					len = 0;
+				} else if (
+					 separator::contains(cmd[len - 3]) &&
+					 cmd[len - 2] == 'o' &&
+					 cmd[len - 1] == 'r' &&
+					 separator::contains(cmd[len])	
+				) {
+					len_c++;
+					op = operation::lor;
+					cmd[len - 3] = '\0';
+					if (!parse_search_term(cmd))
+						return false;
+					cmd += len;
+					len = 0;
+				} else
+					break;
+			}
+
+			return parse_search_term(cmd);
+		}
+
+		bool parse_search_term (char *string)
+		{
+			char field[separator::len_string] = {}, negation[] = {}, oper[LEN] = {}, value[LEN] = {};
 			int n = sscanf(string, "%s%s%s%s", field, negation, oper, value);
 			if (n != 3 && n != 4)
 				return false;

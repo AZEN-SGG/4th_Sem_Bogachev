@@ -12,17 +12,6 @@
 #include <memory>
 
 
-char * skip_spaces (char *str, const char *div)
-{
-	bool ch[256] = {};
-	
-	for (int i = 0 ; div[i] != '\0' ; ++i)
-		ch[(unsigned int)div[i]] = 1;
-	int i = 0;
-	for (; str[i] || ch[(unsigned int)str[i]] ; ++i);
-
-	return str + i;
-}
 
 template <typename T>
 class list2;
