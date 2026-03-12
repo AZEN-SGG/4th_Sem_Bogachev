@@ -10,6 +10,7 @@
 
 #include "record.h"
 #include "pattern.h"
+#include "list.h"
 
 #include <algorithm>
 #include <cstdio>
@@ -556,8 +557,20 @@ class command : public record, public pattern
 			}
 		}
 
-		bool apply (list2<record>& worm)
+		bool apply (list2<record> *worm)
 		{
+			switch (type)
+			{
+				case command_type::insert:
+					worm->add_node(*this);
+					break;
+				case command_type::select:
+					apply_select();
+					break;
+				case command_type::del:
+					
+
+			}
 		}
 
 		bool apply (const record& x) const
@@ -565,16 +578,43 @@ class command : public record, public pattern
 			bool res = false;
 			if (c_group != condition::none)
 				res = x.compare_group(c_group, *this);
-			else if (c_phone != condition::none)
-				res = x.compare_phone(c_phone, *this);
-			else if (c_name != condition::none)
+			if (c_phone != condition::none)
 			{
+				switch (op)
+				{
+					case operation::land:
+						res = res && x.compare_phone(c_phone, *this);
+						break;
+					case operation::lor:
+						res = res || x.compare_phone(c_phone, *this);
+						break;
+					case operation::none:
+						res = x.compare_phone(c_phone, *this);
+						break;
+				}
+			}
+			if (c_name != condition::none)
+			{
+				bool temp = false;
 				if (c_name == condition::like)
-					res = is_valid(x.get_word(), 0, 0);
+					temp = is_valid(x.get_word(), 0, 0);
 				else if (c_name == condition::nlike)
-					res = !is_valid(x.get_word(), 0, 0);
+					temp = !is_valid(x.get_word(), 0, 0);
 				else
-					res = x.compare_word(c_name, *this);
+					temp = x.compare_word(c_name, *this);
+
+				switch (op)
+				{
+					case operation::land:
+						res = res && temp;
+						break;
+					case operation::lor:
+						res = res || temp;
+						break;
+					case operation::none:
+						res = temp;
+						break;
+				}
 			}
 
 			return res;
