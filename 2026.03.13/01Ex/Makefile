@@ -15,7 +15,7 @@ else
 endif
 
 TARGET = a.$(EXE)
-OBJ = main.o solve.o
+OBJ = main.o solve.o pattern.o command.o parse_command.o apply_command.o
 
 %.o: %.cpp
 	g++ $(WFLAGS) -c $< -o $@
