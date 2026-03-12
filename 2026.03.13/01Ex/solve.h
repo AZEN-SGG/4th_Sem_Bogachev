@@ -1,10 +1,11 @@
 #ifndef SOLVE_H
 #define SOLVE_H
 
-#include "record.h"
-#include "request.h"
-#include "list.h"
 #include "io_status.h"
+#include "list.h"
+#include "record.h"
+#include "command_type.h"
+#include "command.h"
 
 #include <memory>
 #include <cstdio>

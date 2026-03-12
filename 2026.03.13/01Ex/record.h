@@ -66,11 +66,11 @@ class record : virtual public name_t
 		}
 		record& operator= (const record& x) = delete;
 
-		bool compare_word (condition x, const record& y) const
+		static int cmp_word (const record& x, const record& y)
 		{
 			int cmp = 0;
-			
-			if (word == nullptr)
+
+			if (x.word == nullptr)
 			{
 				if (y.word == nullptr)
 					cmp = 0;
@@ -81,14 +81,17 @@ class record : virtual public name_t
 				if (y.word == nullptr)
 					cmp = 1;
 				else
-					cmp = std::strcmp(word.get(), y.word.get());
+					cmp = std::strcmp(x.word.get(), y.word.get());
 			}
 
-			return compare(x, cmp);
-		};
+			return cmp;
+		}
+		static int cmp_phone (const record& x, const record& y) { return x.phone - y.phone; }
+		static int cmp_group (const record& x, const record& y) { return x.group - y.group; }
 
-		bool compare_phone (condition x, const record& y) const { return compare(x, phone - y.phone); }
-		bool compare_group (condition x, const record& y) const { return compare(x, group - y.group); }
+		bool compare_word (condition x, const record& y) const { return compare(x, cmp_word(*this, y)); };
+		bool compare_phone (condition x, const record& y) const { return compare(x, cmp_phone(*this, y)); }
+		bool compare_group (condition x, const record& y) const { return compare(x, cmp_group(*this, y)); }
 
 		void print (FILE *fp = stdout, const ordering *order = nullptr) const
 		{

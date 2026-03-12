@@ -3,6 +3,7 @@
 
 #include "io_status.h"
 #include "list_node.h"
+#include "comparator.h"
 
 #include <cstdio>
 #include <new>
@@ -116,7 +117,7 @@ class list2
 			return ret;
 		}
 
-		void delete_subtree (list2_node<T> *curr)
+		void delete_sublist (list2_node<T> *curr)
 		{
 			for (list2_node<T> *next = curr->link ; curr ; curr = next)
 			{
@@ -142,9 +143,19 @@ class list2
 			}
 		}
 
-		list2_node<T> * select_valid (command& x) const
+		static int print_sublist (const list2_node<T> *curr, FILE *fp = stdout)
 		{
-			list2_node *origin = nullptr, *prev = nullptr;
+			int i = 0;
+			for (; curr ; curr = curr->link, ++i)
+				curr->print(fp);
+
+			return i;
+		}
+
+		template <typename X>
+		list2_node<T> * select_valid (const X& x) const
+		{
+			list2_node<T> *origin = nullptr, *prev = nullptr;
 			for (auto *curr = head ; curr ; curr = curr->next)
 				if (x.is_valid(*curr))
 				{
@@ -160,7 +171,7 @@ class list2
 		}
 
 		// Adding sorted list B to sorted list A
-		list2_node<T> * add_sorted_to_sorted (list2_node<T> *l_temp, int len_add, list2_node<T> **end_A, int (*cmp)(const T&, const T&))
+		list2_node<T> * add_sorted_to_sorted (list2_node<T> *l_temp, int len_add, list2_node<T> **end_A, comparator<T>& comp)
 		{
 			list2_node<T> *added = nullptr,
 					  *added_next = nullptr,
@@ -175,7 +186,7 @@ class list2
 
 				added_next = added->link;
 
-				for (prev = prev_start, curr = start ; (curr != nullptr) && ((*cmp)(*curr, *added) < 0) ; prev = curr, curr = curr->link);
+				for (prev = prev_start, curr = start ; (curr != nullptr) && (comp(*curr, *added) < 0) ; prev = curr, curr = curr->link);
 				if (curr == nullptr)
 					*end_A = added;
 
@@ -193,10 +204,12 @@ class list2
 			return added;
 		}
 
-		static list2_node<T> * neyman_sort (list2_node<T> *head, int (*cmp)(const T&, const T&))
+		list2_node<T> * sort (list2_node<T> *origin, comparator<T>& comp)
 		{
 			int k = 0,
 				n = 1;
+
+			const bool is_head = origin == head;
 
 			// Main loop
 			while (k != 1)
@@ -207,7 +220,7 @@ class list2
 						  *sorted_end = nullptr;
 				list2 sorted;
 
-				for (start = head ; (start != nullptr) ; k++)
+				for (start = origin ; (start != nullptr) ; k++)
 				{
 					list2 A;
 					list2_node<T> *end_A = nullptr,
@@ -221,7 +234,7 @@ class list2
 					if (end_A == nullptr)
 					{
 						if (sorted_end == nullptr)
-							sorted.head = head;
+							sorted.head = origin;
 						else
 							sorted_end->link = start;
 
@@ -236,7 +249,7 @@ class list2
 					end_A->link = nullptr; // End of the list must be nullptr
 			
 					// Adding B into A
-					start = A.add_sorted_to_sorted(start_B, n, &end_A, cmp);
+					start = A.add_sorted_to_sorted(start_B, n, &end_A, comp);
 					
 					if (sorted_end == nullptr)
 						sorted.head = A.head;
@@ -248,12 +261,16 @@ class list2
 					A.head = nullptr;
 				}
 
-				head = sorted.head;
+				origin = sorted.head;
+				sorted.head = nullptr;
 
 				n <<= 1;
 			}
 
-			return head;
+			if (is_head)
+				head = origin;
+
+			return origin;
 		}
 	private:
 		void erase ()

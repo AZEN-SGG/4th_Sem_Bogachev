@@ -1,14 +1,13 @@
 #include "solve.h"
+#include "command_type.h"
 #include "io_status.h"
-#include "request.h"
 
-
-io_status start_db (const list2<record> *db, int *res)
+io_status start_db (list2<record> *db, int *res)
 {
 	io_status ret;
 	int len = 0,
 		symb = 0;
-	char buf[LEN] = {},
+	char buf[LEN] = {};
 	command x;
 	FILE *f_out = stdout,
 		 *f_in = stdin;
@@ -17,29 +16,34 @@ io_status start_db (const list2<record> *db, int *res)
 
 	while (((symb = fgetc(f_in)) != EOF) && (len < LEN))
 	{
+		// End of command
 		if (symb == ';')
 		{
-			if (len == 0)
-				break;
+			// Set end of the string
 			buf[len] = '\0';
+
+			// Parse command
 			if ((ret = x.parse(buf)) == io_status::format)
 				fprintf(f_out, "Wrong format of request!\n\n");
 			else if (ret != io_status::success)
-				return ret;
+				break;
+			else if (x.get_type() == command_type::quit)
+				break;
 			else
-				(*res) += db->print_valid(x, f_out);
+				(*res) += x.apply(db);
 			len = 0;
 		} else if (symb != '\n' && symb != '\0')
 		{
+			// Write string
 			buf[len] = (char)symb;
 			len++;
 		}
 	}
 
-	if (symb != EOF)
-		return io_status::read;
+	if (symb == EOF)
+		ret = io_status::success;
 
-	return io_status::success;
+	return ret;
 }
 
 

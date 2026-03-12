@@ -7,13 +7,14 @@
 #include "condition.h"
 #include "operation.h"
 #include "command_type.h"
+#include "comparator.h"
 
 #include "record.h"
 #include "pattern.h"
 #include "list.h"
 
-#include <algorithm>
 #include <cstdio>
+#include <memory>
 
 class request;
 
@@ -61,6 +62,8 @@ class command : public record, public pattern
 			return (*this);
 		}
 		command& operator= (const command& x) = delete;
+
+		command_type get_type () const { return type; }
 
 		io_status parse (char *cmd)
 		{
@@ -557,23 +560,79 @@ class command : public record, public pattern
 			}
 		}
 
-		bool apply (list2<record> *worm)
+		void make_cmp (comparator<record>& x) const
 		{
-			switch (type)
-			{
-				case command_type::insert:
-					worm->add_node(*this);
-					break;
-				case command_type::select:
-					apply_select();
-					break;
-				case command_type::del:
-					
+			comparator<record>::cmp_t *funcs[] = {&x.first, &x.second, &x.third};
 
+			for (int i = 0 ; i < max_items ; ++i)
+			{
+				switch (order_by[i])
+				{
+					case ordering::name:
+						*funcs[i] = &cmp_word;
+						break;
+					case ordering::phone:
+						*funcs[i] = &cmp_phone;
+						break;
+					case ordering::group:
+						*funcs[i] = &cmp_group;
+						break;
+					case ordering::none:
+						*funcs[i] = &cmp_none;
+						break;
+				}
 			}
 		}
 
-		bool apply (const record& x) const
+		static int cmp_none (const record&, const record&) { return 0; }
+
+		int apply (list2<record> *worm)
+		{
+			int res = 0;
+
+			switch (type)
+			{
+				case command_type::insert:
+					worm->add_node(static_cast<record&&>(*this));
+					break;
+				case command_type::select:
+					res = apply_select(worm);
+					break;
+				case command_type::del:
+					apply_delete(worm);
+					break;
+				case command_type::quit:
+					break;
+				case command_type::none:
+					break;
+			}
+
+			return res;
+		}
+
+		int apply_select (list2<record> *worm) const
+		{
+			// Create sublist 
+			auto curr = worm->select_valid(*this);
+
+			// Create cmp func
+			comparator<record> comp;
+			make_cmp(comp);
+
+			// Sort list
+			curr = worm->sort(curr, comp);
+
+			// Print
+			return worm->print_sublist(curr);
+		}
+
+		void apply_delete (list2<record> *worm) const
+		{
+			auto curr = worm->select_valid(*this);
+			worm->delete_sublist(curr);
+		}
+
+		bool is_valid (const record& x) const
 		{
 			bool res = false;
 			if (c_group != condition::none)
@@ -597,9 +656,9 @@ class command : public record, public pattern
 			{
 				bool temp = false;
 				if (c_name == condition::like)
-					temp = is_valid(x.get_word(), 0, 0);
+					temp = pattern::is_valid(x.get_word(), 0, 0);
 				else if (c_name == condition::nlike)
-					temp = !is_valid(x.get_word(), 0, 0);
+					temp = !pattern::is_valid(x.get_word(), 0, 0);
 				else
 					temp = x.compare_word(c_name, *this);
 
