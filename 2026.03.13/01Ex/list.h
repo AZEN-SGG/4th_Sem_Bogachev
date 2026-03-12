@@ -4,6 +4,7 @@
 #include "io_status.h"
 #include "list_node.h"
 #include "comparator.h"
+#include "ordering.h"
 
 #include <cstdio>
 #include <new>
@@ -53,7 +54,12 @@ class list2
 				return io_status::memory;
 
 			static_cast<T&>(*buf) = static_cast<T&&>(x);
-			curr->next = buf;
+			
+			if (curr == nullptr)
+				head = buf;
+			else
+				curr->next = buf;
+			
 			buf->prev = curr;
 
 			return io_status::success;
@@ -124,8 +130,11 @@ class list2
 
 		void delete_sublist (list2_node<T> *curr)
 		{
-			for (list2_node<T> *next = curr->link ; curr ; curr = next)
+			list2_node<T> *next = nullptr;
+			for (; curr ; curr = next)
 			{
+				next = curr->link;
+
 				if (curr->prev)
 					curr->prev->next = curr->next;
 				else
@@ -148,11 +157,15 @@ class list2
 			}
 		}
 
-		static int print_sublist (const list2_node<T> *curr, FILE *fp = stdout)
+		static int print_sublist (const list2_node<T> *curr, FILE *fp = stdout, const ordering *order = nullptr)
 		{
+			const ordering default_ordering[ORDERING_LEN] = {ordering::name, ordering::phone, ordering::group};
+			if (!order)
+				order = default_ordering;
+
 			int i = 0;
 			for (; curr ; curr = curr->link, ++i)
-				curr->print(fp);
+				curr->print(fp, order);
 
 			return i;
 		}
@@ -171,6 +184,9 @@ class list2
 
 					prev = curr;
 				}
+
+			if (prev)
+				prev->link = nullptr;
 
 			return origin;
 		}
@@ -209,12 +225,10 @@ class list2
 			return added;
 		}
 
-		list2_node<T> * sort (list2_node<T> *origin, comparator<T>& comp)
+		static list2_node<T> * sort (list2_node<T> *origin, comparator<T>& comp)
 		{
 			int k = 0,
 				n = 1;
-
-			const bool is_head = origin == head;
 
 			// Main loop
 			while (k != 1)
@@ -271,9 +285,6 @@ class list2
 
 				n <<= 1;
 			}
-
-			if (is_head)
-				head = origin;
 
 			return origin;
 		}

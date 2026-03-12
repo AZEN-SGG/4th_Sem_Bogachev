@@ -1,4 +1,5 @@
 #include "command.h"
+#include "command_type.h"
 #include "separator.h"
 
 
@@ -65,18 +66,22 @@ char * command::parse_command(char *cmd)
 				type = command_type::del;
 			}
 			break;
+		default:
+			type = command_type::none;
+			break;
 	}
 
+	cmd = separator::skip_spaces(cmd);
 	return cmd;
 }
 
 io_status command::parse_insert (char *cmd)
 {
 	char buf[LEN] = {};
-	if (sscanf(cmd, "(%s,%d,%d)", buf, &phone, &group) != 3)
+	if (sscanf(cmd, " ( %[^,] , %d , %d ) ", buf, &phone, &group) != 3)
 		return io_status::format;
 
-	word = std::make_unique<char[]>(strlen(buf));
+	word = std::make_unique<char[]>(strlen(buf) + 1);
 
 	int i = 0;
 	for (; buf[i] != '\0' ; ++i)
@@ -97,15 +102,15 @@ io_status command::parse_select (char *cmd)
 	{
 		if (
 				(!where) &&
-				separator::contains(cmd[len - 6]) &&
-				cmd[len - 5] == 'w' &&
-				cmd[len - 4] == 'h' &&
-				cmd[len - 3] == 'e' &&
-				cmd[len - 2] == 'r' &&
-				cmd[len - 1] == 'e' &&
-				separator::contains(cmd[len])
+				separator::contains(cmd[len - 9]) &&
+				cmd[len - 8] == 'w' &&
+				cmd[len - 7] == 'h' &&
+				cmd[len - 6] == 'e' &&
+				cmd[len - 5] == 'r' &&
+				cmd[len - 4] == 'e' &&
+				separator::contains(cmd[len - 3])
 		) {
-			where = cmd + len - 6;
+			where = cmd + len - 9;
 			where[0] = '\0';
 			where += 7;
 		} else if (
@@ -280,8 +285,7 @@ bool command::parse_search_terms (char *cmd)
 				return false;
 			cmd += len;
 			len = 0;
-		} else
-			break;
+		}
 	}
 
 	return parse_search_term(cmd);

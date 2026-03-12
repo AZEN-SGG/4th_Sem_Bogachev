@@ -14,6 +14,15 @@ class name_t
 		std::unique_ptr<char[]> word = nullptr;
 
 		void erase () { word.reset(); }
+	public:
+		name_t () = default;
+		~name_t () = default;
+
+		name_t(const name_t&) = delete;
+		name_t& operator=(const name_t&) = delete;
+
+		name_t(name_t&&) noexcept = default;
+		name_t& operator=(name_t&&) noexcept = default;
 };
 
 enum class type_pattern
@@ -37,10 +46,10 @@ class pattern : virtual public name_t
 		std::unique_ptr<borders[]> span = nullptr;
 		std::unique_ptr<type_pattern[]> spec = nullptr;
 	public:
-		pattern() = default;
-		~pattern() = default;
+		pattern () = default;
+		~pattern () = default;
 
-		pattern(const pattern&) = delete;
+		pattern (const pattern&) = delete;
 
 		pattern& operator= (pattern&& x)
 		{

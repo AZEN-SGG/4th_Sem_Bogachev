@@ -43,7 +43,7 @@ int command::apply_select (list2<record> *worm) const
 	}
 
 	// Print
-	return worm->print_sublist(curr);
+	return worm->print_sublist(curr, stdout, order);
 }
 
 void command::apply_delete (list2<record> *worm) const

@@ -23,8 +23,11 @@ class separator
 
 		static char * skip_spaces (char *str)
 		{
+			if (!str)
+				return nullptr;
+
 			int i = 0;
-			for (; str[i] || ch_[(unsigned int)str[i]] ; ++i);
+			for (; str[i] && (unsigned int)str[i] < 256 && ch_[(unsigned int)str[i]] ; ++i);
 
 			return str + i;
 		}

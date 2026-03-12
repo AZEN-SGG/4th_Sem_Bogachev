@@ -56,7 +56,7 @@ class record : virtual public name_t
 		{
 			if (this != &x)
 			{
-				name_t::operator=(std::move(x));
+				static_cast<name_t&>(*this) = static_cast<name_t&&>(x);
 				phone = x.phone;
 				group = x.group;
 				x.phone = 0;
