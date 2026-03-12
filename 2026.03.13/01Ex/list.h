@@ -43,13 +43,18 @@ class list2
 
 		io_status add_node (T&& x)
 		{
-			list2_node<T> buf = new list2_node<T>;
+			auto curr = head;
+			for (; curr && curr->next ; curr = curr->next)
+				if (x.is_equal(static_cast<T&>(*curr)))
+					return io_status::success;
+
+			list2_node<T> *buf = new list2_node<T>;
 			if (buf == nullptr)
 				return io_status::memory;
 
-			*buf = std::move(x);
-			head->prev = buf;
-			head = buf;
+			static_cast<T&>(*buf) = static_cast<T&&>(x);
+			curr->next = buf;
+			buf->prev = curr;
 
 			return io_status::success;
 		}

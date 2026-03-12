@@ -8,6 +8,8 @@
 template<>
 unsigned int list2<record>::r = -1;
 
+bool separator::ch_[separator::char_len] = {};
+
 int main(int argc, char * argv[])
 {
     int res = 0;

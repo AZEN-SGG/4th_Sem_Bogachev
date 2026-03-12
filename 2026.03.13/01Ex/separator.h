@@ -6,7 +6,7 @@ class separator
 {
 	private:
 		static const int char_len = 256;
-		inline static bool ch_[char_len] = {};
+		static bool ch_[char_len];
 
 	public:
 		static const int len_string = 1234;

@@ -1,7 +1,7 @@
 #include "command.h"
 
 
-void command::print (FILE *fp = stdout) const
+void command::print (FILE *fp) const
 		{
 			condition cond = condition::none;
 			if (c_group != condition::none)

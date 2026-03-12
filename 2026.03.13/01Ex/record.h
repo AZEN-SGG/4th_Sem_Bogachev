@@ -66,6 +66,15 @@ class record : virtual public name_t
 		}
 		record& operator= (const record& x) = delete;
 
+		int is_equal (const record& x) const
+		{
+			return (
+				strcmp(x.word.get(), word.get()) == 0 &&
+				x.phone == phone &&
+				x.group == group
+			);
+		}
+
 		static int cmp_word (const record& x, const record& y)
 		{
 			int cmp = 0;

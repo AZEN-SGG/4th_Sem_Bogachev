@@ -127,6 +127,10 @@ class command : public record, public pattern
 			c_phone	= condition::none;
 			c_group	= condition::none;
 			op = operation::none;
+			type = command_type::none;
+
+			for (int i = 0 ; i < max_items ; ++i)
+				order_by[i] = order[i] = ordering::none;
 		}
 };
 

@@ -1,4 +1,6 @@
 #include "command.h"
+#include "condition.h"
+#include "ordering.h"
 
 
 int command::apply (list2<record> *worm)
@@ -30,12 +32,15 @@ int command::apply_select (list2<record> *worm) const
 	// Create sublist 
 	auto curr = worm->select_valid(*this);
 
-	// Create cmp func
-	comparator<record> comp;
-	make_cmp(comp);
+	if (order_by[0] != ordering::none)
+	{
+		// Create cmp func
+		comparator<record> comp;
+		make_cmp(comp);
 
-	// Sort list
-	curr = worm->sort(curr, comp);
+		// Sort list
+		curr = worm->sort(curr, comp);
+	}
 
 	// Print
 	return worm->print_sublist(curr);
@@ -50,6 +55,7 @@ void command::apply_delete (list2<record> *worm) const
 bool command::is_valid (const record& x) const
 {
 	bool res = false;
+
 	if (c_group != condition::none)
 		res = x.compare_group(c_group, *this);
 	if (c_phone != condition::none)
@@ -89,6 +95,15 @@ bool command::is_valid (const record& x) const
 				res = temp;
 				break;
 		}
+	}
+
+	// When no 'where'
+	if (
+		c_name == condition::none &&
+		c_phone == condition::none &&
+		c_group == condition::none
+	) {
+		res = true;
 	}
 
 	return res;
