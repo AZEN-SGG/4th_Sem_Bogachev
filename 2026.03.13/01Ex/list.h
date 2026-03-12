@@ -230,6 +230,9 @@ class list2
 			int k = 0,
 				n = 1;
 
+			if (!origin)
+				return nullptr;
+
 			// Main loop
 			while (k != 1)
 			{
