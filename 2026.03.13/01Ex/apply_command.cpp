@@ -1,8 +1,4 @@
 #include "command.h"
-#include "condition.h"
-#include "operation.h"
-#include "ordering.h"
-#include "validator.h"
 
 
 int command::apply (list2<record> *worm)
@@ -31,10 +27,7 @@ int command::apply (list2<record> *worm)
 
 int command::apply_select (list2<record> *worm) const
 {
-	validate();
-
-	// Create sublist 
-	auto curr = worm->select_valid(*this);
+	auto curr = validate(worm);
 
 	if (order_by[0] != ordering::none)
 	{
@@ -52,92 +45,64 @@ int command::apply_select (list2<record> *worm) const
 
 void command::apply_delete (list2<record> *worm) const
 {
-	auto curr = worm->select_valid(*this);
+	auto curr = validate(worm);
 	worm->delete_sublist(curr);
 }
 
-list2_node * command::validation ()
+list2_node<record> * command::validate (list2<record> *worm) const
 {
 	validator<command, record> val;
+	make_validator(val);
+
+	// Create sublist 
+	auto curr = worm->select_valid(*this, val);
+
+	return curr;
+}
+
+void command::make_validator (validator<command, record>& val) const
+{
 	val.op = op;
 
 	validator<command, record>::valid_t neutral = nullptr;
 	switch (op)
 	{
 		case operation::land:
-			neutral = &is_true;
+			neutral = &command::is_true;
 		case operation::lor:
-			neutral = &is_false;
+			neutral = &command::is_false;
 		case operation::none:
-			neutral = &is_true;
+			neutral = nullptr;
 	}
 
 	if (c_group != condition::none)
-	{
-		r_group = x.compare_group(c_group, *this);
-		if ((!r_group) && op == operation::land)
-			return false;
-	} else
-}
-
-bool is_true (record&) { return true; }
-bool is_false (record&) { return false; }
-
-bool command::is_valid (const record& x) const
-{
-	bool r_group = false,
-		 r_phone = false,
-		 r_name = false;
-
-	{
-		if (op == operation::land)
-			r_group = true;
-		else
-			r_group = false;
-	}
+		val.fgroup = &command::cmp_group;
+	else
+		val.fgroup = neutral;
 
 	if (c_phone != condition::none)
-	{
-		r_phone = x.compare_phone(c_phone, *this);
-		if ((!r_phone) && op == operation::land)
-			return false;
-	} else
-	{
-		if (op == operation::land)
-			r_phone = true;
-		else
-			r_phone = false;
-	}
+		val.fphone = &command::cmp_phone;
+	else
+		val.fgroup = neutral;
 
 	if (c_name != condition::none)
 	{
 		if (c_name == condition::like)
-			r_name = pattern::is_valid(x.get_word(), 0, 0);
+			val.fname = &command::like_name;
 		else if (c_name == condition::nlike)
-			r_name = !pattern::is_valid(x.get_word(), 0, 0);
+			val.fname = &command::nlike_name;
 		else
-			r_name = x.compare_word(c_name, *this);
+			val.fname = &command::cmp_name;
 	} else
-	{
-		if (op == operation::land)
-			r_name = true;
-		else
-			r_name = false;
-	}
-
-	switch (op)
-	{
-		case operation::land:
-			return r_name && r_phone && r_group;
-		default:
-			if (
-				c_name == condition::none &&
-				c_phone == condition::none &&
-				c_group == condition::none
-			) {
-				r_name = true;
-			}
-			return r_name || r_phone || r_group;
-	}
+		val.fname = neutral;
 }
-	
+
+bool command::is_true (record&) const { return true; }
+bool command::is_false (record&) const { return false; }
+
+bool command::cmp_group (record& x) const { return x.compare_group(c_group, *this); }
+bool command::cmp_phone (record& x) const { return x.compare_phone(c_group, *this); }
+bool command::cmp_name (record& x) const { return x.compare_word(c_group, *this); }
+bool command::like_name (record& x) const { return pattern::is_valid(x.get_word(), 0, 0); }
+bool command::nlike_name (record& x) const { return !pattern::is_valid(x.get_word(), 0, 0); }
+

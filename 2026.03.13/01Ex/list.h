@@ -5,6 +5,7 @@
 #include "list_node.h"
 #include "comparator.h"
 #include "ordering.h"
+#include "validator.h"
 
 #include <cstdio>
 #include <new>
@@ -171,11 +172,11 @@ class list2
 		}
 
 		template <typename X>
-		list2_node<T> * select_valid (const X& x) const
+		list2_node<T> * select_valid (const X& x, validator<X, T> &val) const
 		{
 			list2_node<T> *origin = nullptr, *prev = nullptr;
 			for (auto *curr = head ; curr ; curr = curr->next)
-				if (x.is_valid(*curr))
+				if (val(x, *curr))
 				{
 					if (prev)
 						prev->link = curr;

@@ -8,9 +8,11 @@
 #include "operation.h"
 #include "command_type.h"
 #include "comparator.h"
+#include "validator.h"
 
 #include "record.h"
 #include "pattern.h"
+#include "list_node.h"
 #include "list.h"
 
 #include <cstdio>
@@ -90,6 +92,18 @@ class command : public record, public pattern
 		int apply (list2<record> *worm);
 		int apply_select (list2<record> *worm) const;
 		void apply_delete (list2<record> *worm) const;
+
+		list2_node<record> * validate (list2<record> *worm) const;
+		void make_validator (validator<command, record>& val) const;
+		bool is_true (record&) const;
+		bool is_false (record&) const;
+
+		bool cmp_group (record& x) const;
+		bool cmp_phone (record& x) const;
+		bool cmp_name(record& x) const;
+		bool like_name (record& x) const;
+		bool nlike_name (record& x) const;
+
 		bool is_valid (const record& x) const;
 
 		void make_cmp (comparator<record>& x) const

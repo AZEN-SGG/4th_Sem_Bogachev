@@ -2,6 +2,7 @@
 #include "command_type.h"
 #include "io_status.h"
 #include <cstdio>
+#include <cstring>
 
 io_status start_db (list2<record> *db, int *res)
 {
@@ -15,38 +16,38 @@ io_status start_db (list2<record> *db, int *res)
 
 	(*res) = 0;
 
-	while (((symb = fgetc(f_in)) != EOF) && (len < LEN))
+	while (fgets(buf, LEN, f_in))
 	{
-		// End of command
-		if (symb == ';')
-		{
-			// Set end of the string
-			buf[len] = '\0';
+		char *saveptr = nullptr,
+			 *cmd = buf;
+		int is_break = 0;
 
+		while ((cmd = strtok_r(cmd, ";\n", &saveptr)) != nullptr)
+		{
 			// Parse command
 			if ((ret = x.parse(buf)) == io_status::format)
-				fprintf(f_out, "Wrong format of request!\n");
+				fprintf(f_out, "Wrong format of request!\n\n");
 			else if (ret != io_status::success)
+			{
+				is_break = 1;
 				break;
-			else if (x.get_type() == command_type::quit)
+			} else if (x.get_type() == command_type::quit)
+			{
+				is_break = 1;
 				break;
-			else
+			} else
 				(*res) += x.apply(db);
 
+			len++;
 			fprintf(f_out, "\n");
-			len = 0;
-		} else if (symb != '\n' && symb != '\0')
-		{
-			// Write string
-			buf[len] = (char)symb;
-			len++;
-		} else {
-			buf[len] = ' ';
-			len++;
+			cmd = nullptr;
 		}
+
+		if (is_break)
+			break;
 	}
 
-	if (symb == EOF)
+	if (feof(f_in) != 0)
 		ret = io_status::success;
 
 	return ret;

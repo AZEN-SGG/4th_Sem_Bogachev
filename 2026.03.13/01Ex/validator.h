@@ -6,14 +6,14 @@
 template <typename T, typename X>
 struct validator
 {
-	using valid_t = bool (T::*)(X&);
+	using valid_t = bool (T::*)(X&) const;
 
 	valid_t fname;
 	valid_t fphone;
 	valid_t fgroup;
 	operation op;
 
-	bool operator() (T& obj, X& x)
+	bool operator() (const T& obj, X& x)
 	{
 		bool ret;
 

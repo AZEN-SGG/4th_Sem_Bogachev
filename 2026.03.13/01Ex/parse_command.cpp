@@ -1,5 +1,6 @@
 #include "command.h"
 #include "command_type.h"
+#include "operation.h"
 #include "separator.h"
 
 
@@ -94,52 +95,32 @@ io_status command::parse_insert (char *cmd)
 io_status command::parse_select (char *cmd)
 {
 	io_status ret = io_status::format;
-	char *where = nullptr,
-		 *in_order = nullptr;
-	int len = 0;
-	for (; cmd[len] != '\0' && len < 9 ; ++len);
-	for (; cmd[len] != '\0' ; ++len)
-	{
-		if (
-				(!where) &&
-				separator::contains(cmd[len - 9]) &&
-				cmd[len - 8] == 'w' &&
-				cmd[len - 7] == 'h' &&
-				cmd[len - 6] == 'e' &&
-				cmd[len - 5] == 'r' &&
-				cmd[len - 4] == 'e' &&
-				separator::contains(cmd[len - 3])
-		) {
-			where = cmd + len - 9;
-			where[0] = '\0';
-			where += 7;
-		} else if (
-				separator::contains(cmd[len - 9]) &&
-				cmd[len - 8] == 'o' &&
-				cmd[len - 7] == 'r' &&
-				cmd[len - 6] == 'd' &&
-				cmd[len - 5] == 'e' &&
-				cmd[len - 4] == 'r' &&
-				separator::contains(cmd[len - 3]) &&
-				cmd[len - 2] == 'b' &&
-				cmd[len - 1] == 'y' &&
-				separator::contains(cmd[len])
-		) {
-			in_order = cmd + len - 9;
-			in_order[0] = '\0';
-			in_order += 10;
+	char *where = cmd,
+		 *order_by = nullptr;
+	bool had_where = false;
 
-			if ((ret = parse_order(in_order)) != io_status::success)
-				return ret;
-			break;
-		}
+	if ((where = strstr(cmd, " where ")) != nullptr)
+	{
+		where[0] = '\0';
+		where += 7;
+
+		had_where = true;
 	}
+
+	if ((order_by = strstr(where, " order by ")) != nullptr)
+	{
+		order_by[0] = '\0';
+		order_by += 10;
+		
+		if ((ret = parse_order(order_by)) != io_status::success)
+			return ret;
+	}
+
+	if (had_where && (!parse_search_terms(where)))
+		return io_status::format;
 
 	if ((ret = parse_output(cmd)) != io_status::success)
 		return ret;
-
-	if (where && (!parse_search_terms(where)))
-		return io_status::format;
 
 	return io_status::success;
 }
@@ -148,22 +129,12 @@ bool command::parse_delete (char *cmd)
 {
 	bool ret = true;
 
-	cmd = separator::skip_spaces(cmd);
-	if (
-		cmd[0] == 'w' &&
-		cmd[1] == 'h' &&
-		cmd[2] == 'e' &&
-		cmd[3] == 'r' &&
-		cmd[4] == 'e' &&
-		separator::contains(cmd[5])
-	) {
-		cmd += 6;
-		ret = parse_search_terms(cmd);
-	} else
+	if ((cmd = strstr(cmd, " where ")) != nullptr)
 	{
-		c_name = condition::none;
-		c_phone = condition::none;
-		c_group = condition::none;
+		cmd += 7;
+
+		if (!parse_search_terms(cmd))
+			ret = false;
 	}
 
 	return ret;
@@ -250,42 +221,39 @@ io_status command::parse_output (char *cmd)
 
 bool command::parse_search_terms (char *cmd)
 {
-	int len = 0;
-	for (; cmd[len] != '\0' && len < 4 ; ++len);
-	if (cmd[len] == '\0')
-		return false;
+	char *subcmd;
+	op = operation::lor;
 
-	int len_c = 1;
-	for (; cmd[len] != '\0' && len_c < len_command ; ++len)
+	while ((subcmd = strstr(cmd, " and ")) != nullptr)
 	{
-		if (
-			 separator::contains(cmd[len - 4]) &&
-			 cmd[len - 3] == 'a' &&
-			 cmd[len - 2] == 'n' &&
-			 cmd[len - 1] == 'd' &&
-			 separator::contains(cmd[len])
-		) {
-			len_c++;
-			op = operation::land;
-			cmd[len - 4] = '\0';
-			if (!parse_search_term(cmd))
-				return false;
-			cmd += len;
-			len = 0;
-		} else if (
-			 separator::contains(cmd[len - 3]) &&
-			 cmd[len - 2] == 'o' &&
-			 cmd[len - 1] == 'r' &&
-			 separator::contains(cmd[len])	
-		) {
-			len_c++;
-			op = operation::lor;
-			cmd[len - 3] = '\0';
-			if (!parse_search_term(cmd))
-				return false;
-			cmd += len;
-			len = 0;
-		}
+		subcmd[0] = '\0';
+		if (!parse_search_term(cmd))
+			return false;
+
+		op = operation::land;
+
+		subcmd += 5;
+		cmd = subcmd;
+	}
+
+	if (op == operation::land)
+	{
+		if (!parse_search_term(cmd))
+			return false;
+
+		return true;
+	}
+
+	while ((subcmd = strstr(cmd, " or ")) != nullptr)
+	{
+		subcmd[0] = '\0';
+		if (!parse_search_term(cmd))
+			return false;
+
+		op = operation::lor;
+
+		subcmd += 4;
+		cmd = subcmd;
 	}
 
 	return parse_search_term(cmd);
