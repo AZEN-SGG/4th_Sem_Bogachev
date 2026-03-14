@@ -107,6 +107,9 @@ io_status command::parse_select (char *cmd)
 		had_where = true;
 	}
 
+	if (!where)
+		where = cmd;
+
 	if ((order_by = strstr(where, " order by ")) != nullptr)
 	{
 		order_by[0] = '\0';
@@ -129,9 +132,9 @@ bool command::parse_delete (char *cmd)
 {
 	bool ret = true;
 
-	if ((cmd = strstr(cmd, " where ")) != nullptr)
+	if ((cmd = strstr(cmd, "where ")) != nullptr)
 	{
-		cmd += 7;
+		cmd += 6;
 
 		if (!parse_search_terms(cmd))
 			ret = false;
@@ -237,12 +240,7 @@ bool command::parse_search_terms (char *cmd)
 	}
 
 	if (op == operation::land)
-	{
-		if (!parse_search_term(cmd))
-			return false;
-
-		return true;
-	}
+		return parse_search_term(cmd);
 
 	while ((subcmd = strstr(cmd, " or ")) != nullptr)
 	{

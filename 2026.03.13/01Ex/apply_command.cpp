@@ -69,10 +69,13 @@ void command::make_validator (validator<command, record>& val) const
 	{
 		case operation::land:
 			neutral = &command::is_true;
+			break;
 		case operation::lor:
 			neutral = &command::is_false;
+			break;
 		case operation::none:
 			neutral = nullptr;
+			break;
 	}
 
 	if (c_group != condition::none)
@@ -83,7 +86,7 @@ void command::make_validator (validator<command, record>& val) const
 	if (c_phone != condition::none)
 		val.fphone = &command::cmp_phone;
 	else
-		val.fgroup = neutral;
+		val.fphone = neutral;
 
 	if (c_name != condition::none)
 	{
@@ -101,8 +104,8 @@ bool command::is_true (record&) const { return true; }
 bool command::is_false (record&) const { return false; }
 
 bool command::cmp_group (record& x) const { return x.compare_group(c_group, *this); }
-bool command::cmp_phone (record& x) const { return x.compare_phone(c_group, *this); }
-bool command::cmp_name (record& x) const { return x.compare_word(c_group, *this); }
+bool command::cmp_phone (record& x) const { return x.compare_phone(c_phone, *this); }
+bool command::cmp_name (record& x) const { return x.compare_word(c_name, *this); }
 bool command::like_name (record& x) const { return pattern::is_valid(x.get_word(), 0, 0); }
 bool command::nlike_name (record& x) const { return !pattern::is_valid(x.get_word(), 0, 0); }
 

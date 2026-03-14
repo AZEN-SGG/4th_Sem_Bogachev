@@ -15,17 +15,19 @@ struct validator
 
 	bool operator() (const T& obj, X& x)
 	{
-		bool ret;
+		bool ret = true;
 
 		switch (op) {
 			case operation::land:
-				ret = (obj.*fphone(x) &&
-						obj.*fgroup(x) &&
-						obj.*fname(x));
+				ret = ((obj.*fphone)(x) &&
+						(obj.*fgroup)(x) &&
+						(obj.*fname)(x));
+				break;
 			case operation::lor:
-				ret = (obj.*fphone(x) ||
-						obj.*fgroup(x) ||
-						obj.*fname(x));
+				ret = ((obj.*fphone)(x) ||
+					  	(obj.*fgroup)(x) ||
+						(obj.*fname)(x));
+				break;
 			case operation::none:
 				ret = true;
 		}

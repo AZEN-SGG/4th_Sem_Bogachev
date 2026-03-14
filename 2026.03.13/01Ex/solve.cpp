@@ -6,9 +6,7 @@
 
 io_status start_db (list2<record> *db, int *res)
 {
-	io_status ret;
-	int len = 0,
-		symb = 0;
+	io_status ret = io_status::success;
 	char buf[LEN] = {};
 	command x;
 	FILE *f_out = stdout,
@@ -38,7 +36,6 @@ io_status start_db (list2<record> *db, int *res)
 			} else
 				(*res) += x.apply(db);
 
-			len++;
 			fprintf(f_out, "\n");
 			cmd = nullptr;
 		}

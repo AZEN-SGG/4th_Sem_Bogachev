@@ -118,10 +118,10 @@ class command : public record, public pattern
 						*funcs[i] = &cmp_word;
 						break;
 					case ordering::phone:
-						*funcs[i] = &cmp_phone;
+						*funcs[i] = &record::cmp_phone;
 						break;
 					case ordering::group:
-						*funcs[i] = &cmp_group;
+						*funcs[i] = &record::cmp_group;
 						break;
 					case ordering::none:
 						*funcs[i] = &cmp_none;
