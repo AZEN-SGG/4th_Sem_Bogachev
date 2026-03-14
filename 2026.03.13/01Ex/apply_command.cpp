@@ -2,6 +2,7 @@
 #include "condition.h"
 #include "operation.h"
 #include "ordering.h"
+#include "validator.h"
 
 
 int command::apply (list2<record> *worm)
@@ -30,6 +31,8 @@ int command::apply (list2<record> *worm)
 
 int command::apply_select (list2<record> *worm) const
 {
+	validate();
+
 	// Create sublist 
 	auto curr = worm->select_valid(*this);
 
@@ -53,11 +56,21 @@ void command::apply_delete (list2<record> *worm) const
 	worm->delete_sublist(curr);
 }
 
-bool command::is_valid (const record& x) const
+list2_node * command::validation ()
 {
-	bool r_group = false,
-		 r_phone = false,
-		 r_name = false;
+	validator<command, record> val;
+	val.op = op;
+
+	validator<command, record>::valid_t neutral = nullptr;
+	switch (op)
+	{
+		case operation::land:
+			neutral = &is_true;
+		case operation::lor:
+			neutral = &is_false;
+		case operation::none:
+			neutral = &is_true;
+	}
 
 	if (c_group != condition::none)
 	{
@@ -65,6 +78,17 @@ bool command::is_valid (const record& x) const
 		if ((!r_group) && op == operation::land)
 			return false;
 	} else
+}
+
+bool is_true (record&) { return true; }
+bool is_false (record&) { return false; }
+
+bool command::is_valid (const record& x) const
+{
+	bool r_group = false,
+		 r_phone = false,
+		 r_name = false;
+
 	{
 		if (op == operation::land)
 			r_group = true;
