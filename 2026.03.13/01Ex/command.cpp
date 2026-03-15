@@ -1,52 +1,135 @@
 #include "command.h"
+#include "command_type.h"
+#include "condition.h"
+#include "ordering.h"
+#include <cstdio>
 
 
 void command::print (FILE *fp) const
-		{
-			condition cond = condition::none;
-			if (c_group != condition::none)
-			{
-				fprintf(fp, "%d", group);
-				cond = c_group;
-			} else if (c_phone != condition::none)
-			{
-				fprintf(fp, "%d", phone);
-				cond = c_phone;
-			} else if (c_name != condition::none)
-			{
-				fprintf(fp, "%s", word.get());
-				cond = c_name;
-			} else
-				fprintf(fp, "none");
+{
+	switch (type)
+	{
+		case command_type::select:
+			fprintf(fp, "select");
+			break;
+		case command_type::insert:
+			fprintf(fp, "insert");
+			break;
+		case command_type::del:
+			fprintf(fp, "delete");
+			break;
+		case command_type::quit:
+			fprintf(fp, "quit");
+			break;
+		case command_type::none:
+			fprintf(fp, "none");
+			break;
+	}
 
-			switch (cond)
+	if (type == command_type::insert)
+		fprintf(fp, " (%s, %d, %d)", word.get(), phone, group);
+
+	if (type == command_type::select)
+	{
+		for (int i = 0 ; i < command::max_items ; ++i)
+			switch (order[i])
 			{
-				case condition::none:
-					fprintf(fp, " none\n\n");
+				case ordering::name:
+					fprintf(fp, " name");
 					break;
-				case condition::lt:
-					fprintf(fp, " <\n\n");
+				case ordering::phone:
+					fprintf(fp, " phone");
 					break;
-				case condition::gt:
-					fprintf(fp, " >\n\n");
+				case ordering::group:
+					fprintf(fp, " group");
 					break;
-				case condition::le:
-					fprintf(fp, " <=\n\n");
-					break;
-				case condition::ge:
-					fprintf(fp, " >=\n\n");
-					break;
-				case condition::eq:
-					fprintf(fp, " =\n\n");
-					break;
-				case condition::ne:
-					fprintf(fp, " <>\n\n");
-					break;
-				case condition::like:
-					fprintf(fp, " like\n\n");
-					break;
-				case condition::nlike:
-					fprintf(fp, " not like\n\n");
+				case ordering::none:
+					fprintf(fp, " none");
 					break;
 			}
-		}
+	}
+
+	if (c_group != condition::none ||
+		c_phone != condition::none ||
+		c_name != condition::none)
+		fprintf(fp, " where");
+
+	if (c_name != condition::none)
+	{
+		fprintf(fp, " name");
+		print_condition(fp, c_name);
+		fprintf(fp, " %s", word.get());
+	}
+
+	if (c_phone != condition::none)
+	{
+		fprintf(fp, " phone");
+		print_condition(fp, c_phone);
+		fprintf(fp, " %d", phone);
+	}
+
+	if (c_group != condition::none)
+	{
+		fprintf(fp, " group");
+		print_condition(fp, c_group);
+		fprintf(fp, " %d", group);
+	}
+
+	if (type == command_type::select)
+	{
+		fprintf(fp, " order by");
+
+		for (int i = 0 ; i < command::max_items ; ++i)
+			switch (order_by[i])
+			{
+				case ordering::name:
+					fprintf(fp, " name");
+					break;
+				case ordering::phone:
+					fprintf(fp, " phone");
+					break;
+				case ordering::group:
+					fprintf(fp, " group");
+					break;
+				case ordering::none:
+					fprintf(fp, " none");
+					break;
+			}
+	}
+
+	fprintf(fp, ";\n");
+}
+
+void command::print_condition (FILE *fp, const condition cond)
+{
+	switch (cond)
+	{
+		case condition::none:
+			fprintf(fp, " none");
+			break;
+		case condition::lt:
+			fprintf(fp, " <");
+			break;
+		case condition::gt:
+			fprintf(fp, " >");
+			break;
+		case condition::le:
+			fprintf(fp, " <=");
+			break;
+		case condition::ge:
+			fprintf(fp, " >=");
+			break;
+		case condition::eq:
+			fprintf(fp, " =");
+			break;
+		case condition::ne:
+			fprintf(fp, " <>");
+			break;
+		case condition::like:
+			fprintf(fp, " like");
+			break;
+		case condition::nlike:
+			fprintf(fp, " not like");
+			break;
+	}
+}

@@ -88,6 +88,7 @@ class command : public record, public pattern
 		bool parse_condition (const char *oper, const fields_t field);
 
 		void print (FILE *fp = stdout) const;
+		static void print_condition (FILE *fp, const condition cond);
 		
 		int apply (list2<record> *worm);
 		int apply_select (list2<record> *worm) const;

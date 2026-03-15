@@ -34,7 +34,10 @@ io_status start_db (list2<record> *db, int *res)
 				is_break = 1;
 				break;
 			} else
+			{
+				x.print();
 				(*res) += x.apply(db);
+			}
 
 			fprintf(f_out, "\n");
 			cmd = nullptr;
