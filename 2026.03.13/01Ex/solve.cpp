@@ -35,7 +35,7 @@ io_status start_db (list2<record> *db, int *res)
 				break;
 			} else
 			{
-				x.print();
+//				x.print();
 				(*res) += x.apply(db);
 			}
 

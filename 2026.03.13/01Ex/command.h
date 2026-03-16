@@ -89,6 +89,7 @@ class command : public record, public pattern
 
 		void print (FILE *fp = stdout) const;
 		static void print_condition (FILE *fp, const condition cond);
+		static void print_operation (FILE *fp, const operation op);
 		
 		int apply (list2<record> *worm);
 		int apply_select (list2<record> *worm) const;

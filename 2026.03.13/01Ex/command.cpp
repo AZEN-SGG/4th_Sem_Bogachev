@@ -1,6 +1,7 @@
 #include "command.h"
 #include "command_type.h"
 #include "condition.h"
+#include "operation.h"
 #include "ordering.h"
 #include <cstdio>
 
@@ -56,6 +57,7 @@ void command::print (FILE *fp) const
 
 	if (c_name != condition::none)
 	{
+		print_operation(fp, op);
 		fprintf(fp, " name");
 		print_condition(fp, c_name);
 		fprintf(fp, " %s", word.get());
@@ -63,6 +65,7 @@ void command::print (FILE *fp) const
 
 	if (c_phone != condition::none)
 	{
+		print_operation(fp, op);
 		fprintf(fp, " phone");
 		print_condition(fp, c_phone);
 		fprintf(fp, " %d", phone);
@@ -70,6 +73,7 @@ void command::print (FILE *fp) const
 
 	if (c_group != condition::none)
 	{
+		print_operation(fp, op);
 		fprintf(fp, " group");
 		print_condition(fp, c_group);
 		fprintf(fp, " %d", group);
@@ -130,6 +134,22 @@ void command::print_condition (FILE *fp, const condition cond)
 			break;
 		case condition::nlike:
 			fprintf(fp, " not like");
+			break;
+	}
+}
+
+void command::print_operation (FILE *fp, const operation op)
+{
+	switch (op)
+	{
+		case operation::land:
+			fprintf(fp, " and");
+			break;
+		case operation::lor:
+			fprintf(fp, " or");
+			break;
+		case operation::none:
+			fprintf(fp, " none");
 			break;
 	}
 }

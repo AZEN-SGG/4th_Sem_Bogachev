@@ -88,14 +88,16 @@ class pattern : virtual public name_t
 
 		int is_in (const char *str, int str_i, int bord_i) const
 		{
-			return ((str[str_i] >= span[bord_i].start) &&
-					(str[str_i] <= span[bord_i].end));
+			return (str[str_i] != '\0' &&
+					((str[str_i] >= span[bord_i].start) &&
+					(str[str_i] <= span[bord_i].end)));
 		}
 
 		int is_out (const char *str, int str_i, int bord_i) const
 		{
-			return ((str[str_i] < span[bord_i].start) ||
-					(str[str_i] > span[bord_i].end));
+			return (str[str_i] != '\0' && 
+					((str[str_i] < span[bord_i].start) ||
+					(str[str_i] > span[bord_i].end)));
 		}
 
 		io_status process_slash (char *str, int *p_len, int *p_back, type_pattern *p_buf)

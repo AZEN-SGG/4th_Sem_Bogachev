@@ -315,7 +315,7 @@ bool command::parse_name (char *field, char *oper, char *value)
 				return false;
 			break;
 		default:
-			init(value, 0, 0);
+			init(value, phone, group);
 	}
 
 	return true;
