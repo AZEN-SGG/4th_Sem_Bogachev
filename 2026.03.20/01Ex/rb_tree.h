@@ -234,42 +234,106 @@ class rb_tree
 				root = x;
 		}
 
+		// Поиск удаляемого элемента
 		static rb_tree_node<T> * search_delete (const T& x, rb_tree_node<T> *curr, rb_tree_node<T> *prev)
 		{
+			// Если пуст, то не нашли
 			if (!curr)
 				return prev;
 
-			int cmp = 0;
-			if ((cmp = x.cmp(*curr)) < 0)
+			// Сравниваем
+			int cmp = x.cmp(*curr);
+
+			// Если меньше, то в левое
+			if (cmp < 0)
 			{
 				curr = search_delete(x, curr->left, curr);
+			// Если больше, то в правое
 			} else if (cmp > 0)
 			{
 				curr = search_delete(x, curr->right, curr);
+			// Если равен, то начинаем удаление
 			} else
 			{
+				// Если есть левый потомок, то ищем самый большой из меньших
 				if (curr->left)
 				{
 					curr = delete_recurrently(curr->left, curr, curr);
 				} else
 				{
+					// Если есть правый потомок, но нет левого, то убираем текущий и оставляем потомка
 					if (curr->right)
 					{
-						rb_tree_node<T> *temp = curr->right;
-						curr->left = temp->left;
-						curr->right = temp->right;
-						curr = static_cast<T&&>(temp);
+						if (curr->color == rb_tree_node<T>::colors::red)
+						{
+							// У красной вершины точно есть предок
+							if (prev->left == curr)
+								prev->left = curr->right;
+							else
+								prev->right = curr->right;
 
-						delete temp;
-						prev = fix_delete(curr, prev);
+							delete curr;
+						} else
+						{
+							if (curr->right->color == rb_tree_node<T>::colors::red)
+							{
+								if (prev)
+								{
+									if (prev->left == curr)
+										prev->left = curr->right;
+									else
+										prev->right = curr->right;
+								}
+
+								curr->right->color = rb_tree_node<T>::colors::black;
+								delete curr;
+							} else
+							{
+								if (prev)
+								{
+									if (prev->left == curr)
+										prev->left = curr->right;
+									else
+										prev->right = curr->right;
+								}
+								
+								prev = rebuild_deletion(curr->right, prev);
+								delete curr;
+							}
+						}
+
+						// Если текущий - корень
+						if (!prev)
+						{
+							prev = curr->right;
+							prev->color = rb_tree_node<T>::colors::black;
+							delete curr;
+						// Если не корень, то
+						} else
+						{
+							// Если вершина чёрная, то нужна перебалансировка
+							if (curr->color == rb_tree_node<T>::colors::black)
+							{
+								curr->color = curr->right->color;
+								prev = fix_delete(curr, prev);
+							}
+
+							if (curr == prev->left)
+								prev->left = curr->right;
+							else
+								prev->right = curr->right;
+
+							delete curr;
+						}
 					} else
 					{
+						prev = rebuild_deletion(curr, prev);
+
 						if (curr == prev->left)
 							prev->left = nullptr;
 						else
 							prev->right = nullptr;
 
-						prev = fix_delete(curr, prev);
 						delete curr;
 					}
 				}
@@ -316,9 +380,202 @@ class rb_tree
 			return prev;
 		}
 
-		static rb_tree_node<T> * fix_delete (rb_tree_node<T> *curr, rb_tree_node<T> *prev)
+		static rb_tree_node<T> * fix_and_delete (rb_tree_node<T> *curr, rb_tree_node<T> *prev, rb_tree_node<T> *child = nullptr)
 		{
+			// Если красная вершина, значит просто удаляем
+			if (curr->color == rb_tree_node<T>::colors::red)
+			{
+				// В данном случае может возникнуть проблема
+				// Переместили данные в curr
+				static_cast<T&>(*curr) = static_cast<T&&>(child);
 
+				// Этот случай возможен, только когда у левого потомка нет правого
+				curr
+				curr->left = nullptr;
+				delete child;
+				return prev;
+			}
+
+			
+		}
+		
+		static void rebuild_deletion (rb_tree_node<T> *curr)
+		{
+			rb_tree_node<T> *temp = curr->parent;
+			for (; curr->parent ; curr = curr->parent)
+			{
+				if (curr == curr->parent->left)
+				{
+					// 1й Случай: Брат - краснокожий :(
+					if (curr->parent->right->color == rb_tree_node<T>::colors::red)
+					{
+						// Обмен между B и D
+						if (curr->parent->parent)
+						{
+							if (curr->parent == curr->parent->parent->left)
+								curr->parent->parent->left = curr->parent->right;
+							else
+								curr->parent->parent->right = curr->parent->right;
+						}
+						curr->parent->right->parent = curr->parent->parent;
+
+						temp = curr->parent->right;
+						curr->parent->right = temp->left;
+						if (temp->left)
+							temp->left->parent = curr->parent;
+
+						temp->left = curr->parent;
+						curr->parent->parent = temp;
+
+						temp->color = rb_tree_node<T>::colors::black;
+						curr->parent->color = rb_tree_node<T>::colors::red;
+					}
+
+					// Теперь "брат" - обязательно чёрный!
+					// Не брат ты мне гнида черномазая
+
+					if (rb_tree_node<T>::get_color(curr->parent->right->right) == rb_tree_node<T>::colors::black)
+					{
+						// 2е Преобразование
+						if (rb_tree_node<T>::get_color(curr->parent->right->left) == rb_tree_node<T>::colors::black)
+						{
+							curr->parent->right->color = rb_tree_node<T>::colors::red;
+							curr = rb_tree_node<T>::colors::black;
+
+							if (curr->parent->color == rb_tree_node<T>::colors::red)
+							{
+								curr->parent->color = rb_tree_node<T>::colors::black;
+								break;
+							}
+
+							continue;
+						// 3е Преобразование
+						// Красная может быть только у существующей
+						} else
+						{
+							temp = curr->parent->right->left;
+							temp->parent = curr->parent;
+							curr->parent->right->left = temp->right;
+							if (temp->right)
+								temp->right->parent = curr->parent->right;
+							temp->right = curr->parent->right;
+							curr->parent->right = temp;
+							temp->right->parent = temp;
+
+							temp->color = rb_tree_node<T>::colors::black;
+							temp->right->color = rb_tree_node<T>::colors::red;
+						}
+					}
+
+					// Теперь правый ребёнок брата - обязательно красный!
+
+					// 4е Преобразование
+					temp = curr->parent->right;
+					if (curr->parent->parent)
+					{
+						if (curr->parent == curr->parent->parent->left)
+							curr->parent->parent->left = temp;
+						else
+							curr->parent->parent->right = temp;
+					}
+					temp->parent = curr->parent->parent;
+					curr->parent->parent = temp;
+					curr->parent->right = temp->left;
+					if (temp->left)
+						temp->left->parent = curr->parent;
+					temp->left = curr->parent;
+
+					temp->color = curr->parent->color;
+					temp->right->color == rb_tree_node<T>::colors::black;
+					curr->parent->color = rb_tree_node<T>::colors::black;
+
+					break;
+				} else
+				{
+					// 1й Случай: Брат - краснокожий :(
+					if (curr->parent->left->color == rb_tree_node<T>::colors::red)
+					{
+						// Обмен между B и D
+						if (curr->parent->parent)
+						{
+							if (curr->parent == curr->parent->parent->left)
+								curr->parent->parent->left = curr->parent->left;
+							else
+								curr->parent->parent->right = curr->parent->left;
+						}
+						curr->parent->left->parent = curr->parent->parent;
+
+						temp = curr->parent->left;
+						curr->parent->left = temp->right;
+						if (temp->right)
+							temp->right->parent = curr->parent;
+
+						temp->right = curr->parent;
+						curr->parent->parent = temp;
+
+						temp->color = rb_tree_node<T>::colors::black;
+						curr->parent->color = rb_tree_node<T>::colors::red;
+					}
+
+					// Теперь "брат" - обязательно чёрный!
+					// Не брат ты мне гнида черномазая
+
+					if (rb_tree_node<T>::get_color(curr->parent->left->left) == rb_tree_node<T>::colors::black)
+					{
+						if (rb_tree_node<T>::get_color(curr->parent->left->right) == rb_tree_node<T>::colors::black)
+						{
+							curr->parent->left->color = rb_tree_node<T>::colors::red;
+							curr = rb_tree_node<T>::colors::black;
+
+							if (curr->parent->color == rb_tree_node<T>::colors::red)
+							{
+								curr->parent->color = rb_tree_node<T>::colors::black;
+								break;
+							}
+
+							continue;
+						// Красная может быть только у существующей
+						} else
+						{
+							temp = curr->parent->left->right;
+							temp->parent = curr->parent;
+							curr->parent->left->right = temp->left;
+							if (temp->left)
+								temp->left->parent = curr->parent->left;
+							temp->left = curr->parent->left;
+							curr->parent->left = temp;
+							temp->left->parent = temp;
+
+							temp->color = rb_tree_node<T>::colors::black;
+							temp->left->color = rb_tree_node<T>::colors::red;
+						}
+					}
+
+					// Теперь правый ребёнок брата - обязательно красный!
+
+					// 4е Преобразование
+					temp = curr->parent->left;
+					if (curr->parent->parent)
+					{
+						if (curr->parent == curr->parent->parent->left)
+							curr->parent->parent->left = temp;
+						else
+							curr->parent->parent->right = temp;
+					}
+					temp->parent = curr->parent->parent;
+					curr->parent->parent = temp;
+					curr->parent->left = temp->right;
+					if (temp->right)
+						temp->right->parent = curr->parent;
+					temp->right = curr->parent;
+
+					temp->color = curr->parent->color;
+					temp->left->color == rb_tree_node<T>::colors::black;
+					curr->parent->color = rb_tree_node<T>::colors::black;
+
+					break;
+				}
+			}
 		}
 
 		static void delete_subtree (rb_tree_node<T> *child)

@@ -65,8 +65,15 @@ class rb_tree_node : public T
 		}
 
 		friend class rb_tree<T>;
-	
 	private:
+		static colors get_color (rb_tree_node<T> *x)
+		{
+			if (x)
+				return x->color;
+			else
+				return colors::black;
+		}
+
 		void erase_links ()
 		{
 			left = nullptr;
