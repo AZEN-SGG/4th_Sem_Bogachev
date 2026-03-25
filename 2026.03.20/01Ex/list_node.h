@@ -1,66 +1,39 @@
 #ifndef LIST_NODE_H
 #define LIST_NODE_H
 
-
-#include <utility>
-
+template <typename T>
+class list;
 
 template <typename T>
-class list2;
-
-template <typename T>
-class list2_node : public T
+class list_node : public T
 {
 	private:
-		list2_node * next = nullptr;
-		list2_node * prev = nullptr;
-		list2_node * link = nullptr; // Mini list in class
+		list_node *next = nullptr;
 	public:
-		list2_node () = default;
-		~list2_node () { next = nullptr; prev = nullptr; link = nullptr; }
+		list_node () = default;
+		~list_node () { next = nullptr; }
 
-		list2_node (const list2_node&) = delete;
-		list2_node (list2_node&& r) : T((T&&)r)
+		list_node (const list_node&) = delete;
+		list_node (list_node&& r) : T((T&&)r) 
+		{ 
+            next = r.next;
+            r.next = nullptr;
+        }
+
+        list_node& operator= (const list_node&) = delete;
+		list_node& operator= (list_node&& r)
 		{
-			prev = r.prev;
-			r.prev = nullptr;
+			*(T *)(this) = (T&&)r;
 
 			next = r.next;
 			r.next = nullptr;
-
-			link = r.link;
-			r.link = nullptr;
-		}
-
-		list2_node& operator= (const list2_node&) = delete;
-		list2_node& operator= (list2_node&& r)
-		{
-			if (this == &r)
-				return *this;
-
-			static_cast<T&>(*this) = std::move(static_cast<T&>(r));
-
-			prev = r.prev;
-			r.prev = nullptr;
-
-			next = r.next;
-			r.next = nullptr;
-
-			link = r.link;
-			r.link = nullptr;
-
 			return *this;
 		}
 
-		list2_node * get_next () const { return next; }
-		list2_node * get_prev () const { return prev; }
-		list2_node * get_link () const { return link; }
-
-		void set_next (list2_node *r) { next = r; }
-		void set_prev (list2_node *r) { prev = r; }
-		void set_link (list2_node *r) { link = r; }
-
-		friend class list2<T>;
+		list_node* get_next () const { return next; }
+		void set_next (list_node *r) { next = r; }
+    
+        friend class list<T>;
 };
 
 #endif // LIST_NODE_H

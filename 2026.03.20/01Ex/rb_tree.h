@@ -433,62 +433,6 @@ class rb_tree
 				root = x;
 		}
 
-		static rb_tree_node<T> * delete_recurrently (rb_tree_node<T> *curr, rb_tree_node<T> *prev, rb_tree_node<T> *removable)
-		{
-			if (curr->right)
-			{
-				curr = delete_recurrently(curr->right, curr);
-				prev = fix_delete(curr, prev);
-			} else
-			{
-				// Переместили концевой на место удаляемого
-				*removable = static_cast<T&&>(*curr);
-				
-				if (curr->left)
-				{
-					rb_tree_node<T> *temp = curr->left;
-					*curr = static_cast<T&&>(*curr->left);
-					delete temp;
-
-					// Перестраиваем с ребёнком
-					prev = fix_delete(curr, prev);
-				} else
-				{
-					// Перестраиваем с фиктивным ребёнком
-					prev = fix_delete(curr, prev);
-					
-					if (prev->left == curr)
-						prev->left = nullptr;
-					else
-						prev->right = nullptr;
-
-					delete curr;
-					curr = nullptr;
-				}
-			}
-			
-			return prev;
-		}
-
-		static rb_tree_node<T> * fix_and_delete (rb_tree_node<T> *curr, rb_tree_node<T> *prev, rb_tree_node<T> *child = nullptr)
-		{
-			// Если красная вершина, значит просто удаляем
-			if (curr->color == rb_tree_node<T>::colors::red)
-			{
-				// В данном случае может возникнуть проблема
-				// Переместили данные в curr
-				static_cast<T&>(*curr) = static_cast<T&&>(child);
-
-				// Этот случай возможен, только когда у левого потомка нет правого
-				curr
-				curr->left = nullptr;
-				delete child;
-				return prev;
-			}
-
-			
-		}
-		
 		// Перестройка дерева
 		static void rebuild_deletion (rb_tree_node<T> *curr)
 		{
