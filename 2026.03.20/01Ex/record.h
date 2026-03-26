@@ -75,6 +75,12 @@ class record : virtual public name_t
 			);
 		}
 
+		template <typename T>
+		int cmp (const record&);
+
+		template <>
+		int cmp <char *> (const record& x) { return cmp_word(*this, x); }
+
 		static int cmp_word (const record& x, const record& y)
 		{
 			int cmp = 0;

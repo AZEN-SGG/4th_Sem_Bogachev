@@ -3,8 +3,14 @@
 
 #include "io_status.h"
 #include "list_node.h"
+#include "list2_node.h"
+#include "validator.h"
 
 #include <cstdio>
+#include <new>
+
+template <typename X, typename U>
+class data_tree;
 
 template <typename T>
 class list
@@ -91,6 +97,33 @@ public:
 		fclose(fp);
 		return ret;	
 	}
+
+	template <typename X>
+	io_status add (const X *x)
+	{
+		auto curr = new (std::nothrow) list_node<T>();
+		if (!curr)
+			return io_status::memory;
+
+		curr->add(x);
+
+		curr->next = head;
+		head = curr;
+	}
+
+	template <typename X>
+	list_node<T> * search_node (const X& x)
+	{
+		auto curr = head;
+		for (; curr ; curr = curr->next)
+			if (curr->is_equal(x))
+				return curr;
+
+		return nullptr;
+	}
+
+	template <typename X, typename U>
+	friend class data_tree;
 private:
 	void erase ()
 	{

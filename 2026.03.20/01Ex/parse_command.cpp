@@ -1,7 +1,4 @@
 #include "command.h"
-#include "command_type.h"
-#include "operation.h"
-#include "separator.h"
 
 
 io_status command::parse (char *cmd)
@@ -136,8 +133,7 @@ bool command::parse_delete (char *cmd)
 	{
 		cmd += 6;
 
-		if (!parse_search_terms(cmd))
-			ret = false;
+		ret = parse_search_terms(cmd);
 	}
 
 	return ret;
@@ -225,7 +221,7 @@ io_status command::parse_output (char *cmd)
 bool command::parse_search_terms (char *cmd)
 {
 	char *subcmd;
-	op = operation::lor;
+	op = operation::land;
 
 	while ((subcmd = strstr(cmd, " and ")) != nullptr)
 	{

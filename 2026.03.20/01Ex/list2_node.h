@@ -6,6 +6,11 @@
 template <typename T>
 class list2;
 
+class command;
+
+template <typename T, typename X>
+class data_tree;
+
 template <typename T>
 class list2_node : public T
 {
@@ -59,6 +64,10 @@ class list2_node : public T
 		void set_link (list2_node *r) { link = r; }
 
 		friend class list2<T>;
+		friend class command;
+
+		template <typename U, typename X>
+		friend class data_tree;
 };
 
 #endif // LIST2_NODE_H

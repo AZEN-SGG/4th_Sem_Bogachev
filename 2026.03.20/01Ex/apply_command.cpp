@@ -1,20 +1,27 @@
 #include "command.h"
+#include "condition.h"
+#include "data_tree.h"
+#include "list2.h"
+#include "list2_node.h"
+#include "operation.h"
+#include "rb_tree.h"
+#include "record.h"
 
 
-int command::apply (list2<record> *worm)
+int command::apply (list2<record> *worm, rb_tree<data_tree<record, char *>> *olha)
 {
 	int res = 0;
 
 	switch (type)
 	{
 		case command_type::insert:
-			worm->add_node(static_cast<record&&>(*this));
+			apply_insert(worm, olha);
 			break;
 		case command_type::select:
-			res = apply_select(worm);
+			res = apply_select(worm, olha);
 			break;
 		case command_type::del:
-			apply_delete(worm);
+			apply_delete(worm, olha);
 			break;
 		case command_type::quit:
 			break;
@@ -25,9 +32,27 @@ int command::apply (list2<record> *worm)
 	return res;
 }
 
-int command::apply_select (list2<record> *worm) const
+// Бинарный поиск одинакового элемента при добавлении
+void command::apply_insert (list2<record> *worm, rb_tree<data_tree<record, char *>> *olha)
 {
-	auto curr = validate(worm);
+	auto curr = olha->search_node<record>(static_cast<const record&>(*this));
+	// В дереве есть список с таким же именем, ищем элемент в этом списке
+	if (curr)
+	{
+		// Если нашёл такой элемент, то добавлять его не нужно
+		if (curr->search_node(*this))
+			return;
+	}
+
+	auto new_node = worm->add_node(static_cast<record&&>(*this));
+	// Если добавление прошло успешно
+	if (new_node)
+		olha->add<list2_node<record>>(new_node);
+}
+
+int command::apply_select (list2<record> *worm, rb_tree<data_tree<record, char *>> *olha) const
+{
+	auto curr = validate(worm, olha);
 
 	if (order_by[0] != ordering::none)
 	{
@@ -43,19 +68,47 @@ int command::apply_select (list2<record> *worm) const
 	return worm->print_sublist(curr, stdout, order);
 }
 
-void command::apply_delete (list2<record> *worm) const
+void command::apply_delete (list2<record> *worm, rb_tree<data_tree<record, char *>> *olha) const
 {
-	auto curr = validate(worm);
-	worm->delete_sublist(curr);
+	list2_node<record> 	*curr = validate(worm, olha),
+						*next = nullptr;
+	for (; curr ; curr = next)
+	{
+		olha->delete_node<list2_node<record>>(*curr);
+
+		next = curr->link;
+
+		if (curr->prev)
+			curr->prev->next = curr->next;
+		else
+			worm->head = curr->next;
+
+		if (curr->next)
+			curr->next->prev = curr->prev;
+
+		delete curr;
+	}
 }
 
-list2_node<record> * command::validate (list2<record> *worm) const
+list2_node<record> * command::validate (list2<record> *worm, rb_tree<data_tree<record, char *>> *olha) const
 {
-	validator<command, record> val;
-	make_validator(val);
+	list2_node<record> *curr = nullptr;
 
-	// Create sublist 
-	auto curr = worm->select_valid(*this, val);
+	validator<command, record> val;
+	if (op == operation::land && c_name == condition::eq)
+	{
+		c_name = condition::none;
+		make_validator(val);
+		c_name = condition::eq;
+
+		rb_tree_node<data_tree<record, char *>> *suit_node = olha->search_node<record>(*this);
+		
+		curr = olha->select_valid(*this, val);
+	} else
+	{
+		make_validator(val);
+		curr = worm->select_valid(*this, val);
+	}
 
 	return curr;
 }

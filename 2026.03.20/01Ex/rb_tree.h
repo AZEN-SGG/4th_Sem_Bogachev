@@ -3,7 +3,10 @@
 
 #include "io_status.h"
 #include "rb_tree_node.h"
+
 #include <new>
+
+class database;
 
 template <typename T>
 class rb_tree
@@ -68,7 +71,7 @@ public:
 	template <typename X>
 	void delete_node (const X& x)
 	{
-		auto curr = search_node(x);
+		auto curr = search_node<X>(x);
 
 		if (!curr)
 			return;
@@ -240,7 +243,7 @@ public:
 					curr->parent->right = curr->right;
 
 				if (curr->right)
-					curr->right->parent = curr->parent;
+					curr->Right->parent = curr->parent;
 
 				delete curr;
 				curr = nullptr;
@@ -272,15 +275,16 @@ public:
 		return curr;
 	}
 
+	// На вход подаётся list2_node
 	template <typename X>
-	io_status add (const X *x)
+	io_status add (X *x)
 	{
 		auto curr = root;
 		while (true)
 		{
-			int cmp = x->cmp(static_cast<T&>(*curr));
+			int cmp = curr->cmp(*x);
 
-			if (cmp < 0)
+			if (cmp > 0)
 			{
 				if (!curr->left)
 				{
@@ -296,7 +300,7 @@ public:
 					break;
 				} else
 					curr = curr->left;
-			} else if (cmp > 0)
+			} else if (cmp < 0)
 			{
 				if (!curr->right)
 				{
@@ -320,7 +324,11 @@ public:
 	}
 
 	void print (const int r, FILE *fp = stdout) const {	print_subtree(root, 0, r, fp); }
+
+	friend class database;
 private:
+	void erase () { delete_subtree(root); root = nullptr; }
+
 	void add_node (rb_tree_node<T> *x)
 	{
 		if (!root)

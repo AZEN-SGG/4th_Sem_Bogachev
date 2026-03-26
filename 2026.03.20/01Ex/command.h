@@ -12,8 +12,10 @@
 
 #include "record.h"
 #include "pattern.h"
-#include "list_node.h"
-#include "list.h"
+#include "list2_node.h"
+#include "list2.h"
+#include "rb_tree.h"
+#include "data_tree.h"
 
 #include <cstdio>
 #include <memory>

@@ -1,8 +1,5 @@
 #include "command.h"
-#include "command_type.h"
-#include "condition.h"
-#include "operation.h"
-#include "ordering.h"
+
 #include <cstdio>
 
 
