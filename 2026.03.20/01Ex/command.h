@@ -93,11 +93,12 @@ class command : public record, public pattern
 		static void print_condition (FILE *fp, const condition cond);
 		static void print_operation (FILE *fp, const operation op);
 		
-		int apply (list2<record> *worm);
-		int apply_select (list2<record> *worm) const;
-		void apply_delete (list2<record> *worm) const;
+		int apply (list2<record> *worm, rb_tree<data_tree<record, char *>> *olha);
+		void apply_insert (list2<record> *worm, rb_tree<data_tree<record, char *>> *olha);
+		int apply_select (list2<record> *worm, rb_tree<data_tree<record, char *>> *olha);
+		void apply_delete (list2<record> *worm, rb_tree<data_tree<record, char *>> *olha);
 
-		list2_node<record> * validate (list2<record> *worm) const;
+		list2_node<record> * validate (list2<record> *worm, rb_tree<data_tree<record, char *>> *olha);
 		void make_validator (validator<command, record>& val) const;
 		bool is_true (record&) const;
 		bool is_false (record&) const;

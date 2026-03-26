@@ -291,8 +291,11 @@ private:
 	void add (list2_node<T> *curr)
 	{
 		if (head)
+		{
 			head->prev = curr;
-		curr->next = head;
+			curr->next = head;
+		}
+
 		head = curr;
 	}
 

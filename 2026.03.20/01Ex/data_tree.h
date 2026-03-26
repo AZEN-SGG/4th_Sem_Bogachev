@@ -4,6 +4,7 @@
 #include "io_status.h"
 #include "list.h"
 #include "list2_node.h"
+#include "list_node.h"
 #include "rb_tree.h"
 #include "validator.h"
 
@@ -105,6 +106,37 @@ public:
 		} else
 			if (val(x, *node))
 				return node;
+	}
+
+	bool del (list2_node<T> *x)
+	{
+		if (uniform)
+		{
+			list_node<data_list<T>> *curr = uniform->head,
+									*prev = nullptr;
+			for (; curr ; curr = curr->next)
+			{
+				if (curr->node == x)
+				{
+					if (prev)
+						prev->next = curr->next;
+					else
+						uniform->head = curr->next;
+
+					if (!uniform->head)
+						return true;
+					
+					node = uniform->head;
+					delete curr;
+					break;
+				} else
+					prev = curr;
+			}
+
+		} else if (node == x)
+			return true;
+
+		return false;
 	}
 
 	friend class rb_tree<T>;

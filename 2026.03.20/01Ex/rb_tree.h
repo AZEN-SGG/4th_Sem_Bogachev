@@ -68,189 +68,6 @@ public:
 		return ret;
 	}
 
-	template <typename X>
-	void delete_node (const X& x)
-	{
-		auto curr = search_node<X>(x);
-
-		if (!curr)
-			return;
-
-		// Значит равен, начинаем удаление
-		// Если есть левый потомок, то ищем самый большой из меньших
-		if (curr->left)
-		{
-			if (!curr->left->right)
-			{
-				curr = curr->left;
-
-				static_cast<T&>(*curr->parent) = static_cast<T&&>(*curr);
-				
-				if (curr->color == rb_tree_node<T>::colors::black)
-				{
-					if (rb_tree_node<T>::get_color(curr->left) == rb_tree_node<T>::colors::black)
-					{
-						if (curr->left)
-						{
-							rb_tree_node<T> *temp = nullptr;
-							curr->parent->left = curr->left;
-							curr->left->parent = curr->parent;
-
-							temp = curr->left;
-							delete curr;
-							curr = temp;
-
-							rebuild_deletion(curr);
-						} else
-						{
-							rebuild_deletion(curr);
-							delete curr;
-						}
-					} else
-					{
-						rb_tree_node<T> *temp = nullptr;
-						curr->parent->left = curr->left;
-						curr->left->parent = curr->parent;
-
-						temp = curr->left;
-						delete curr;
-						curr = temp;
-
-						curr->color = rb_tree_node<T>::color::black;
-					}
-				// Удаляемая вершина - красная, значит просто переносим left
-				} else
-				{
-					if (curr->left)
-					{
-						curr->parent->left = curr->left;
-						curr->left->parent = curr->parent;
-					}
-				}
-			} else
-			{
-				rb_tree_node<T> *temp = curr;
-				for (curr = curr->left->right; curr->right ; curr = curr->right);
-
-				static_cast<T&>(*temp) = static_cast<T&&>(*curr);
-				
-				if (curr->color == rb_tree_node<T>::colors::black)
-				{
-					if (rb_tree_node<T>::get_color(curr->left) == rb_tree_node<T>::colors::black)
-					{
-						if (curr->left)
-						{
-							curr->parent->right = curr->left;
-							curr->left->parent = curr->parent;
-
-							temp = curr->left;
-							delete curr;
-							curr = temp;
-
-							rebuild_deletion(curr);
-						} else
-						{
-							rebuild_deletion(curr);
-							delete curr;
-						}
-					} else
-					{
-						curr->parent->right = curr->left;
-						curr->left->parent = curr->parent;
-						curr->left->color = rb_tree_node<T>::color::black;
-
-						delete curr;
-						curr = nullptr;
-					}
-				// Удаляемая вершина - красная, значит просто переносим left
-				} else
-				{
-					if (curr->left)
-					{
-						curr->parent->right = curr->left;
-						curr->left->parent = curr->parent;
-					}
-				}
-			}
-		// У удаляемой нет левого потомка, значит удаляем именно неё!
-		} else
-		{
-			if (curr->color == rb_tree_node<T>::colors::black)
-			{
-				if (rb_tree_node<T>::get_color(curr->right) == rb_tree_node<T>::colors::black)
-				{
-					if (curr->right)
-					{
-						curr->right->parent = curr->parent;
-
-						if (curr->parent)
-						{
-							if (curr == curr->parent->left)
-								curr->parent->left = curr->right;
-							else
-								curr->parent->right = curr->right;
-
-							rb_tree_node<T> *temp = curr->right;
-							delete curr;
-							curr = temp;
-
-							rebuild_deletion(curr);
-						} else
-						{
-							root = curr->right;
-							delete curr;
-							curr = nullptr;
-						}
-					} else
-					{
-						if (curr->parent)
-						{
-							if (curr == curr->parent->left)
-								curr->parent->left = nullptr;
-							else
-								curr->parent->right = nullptr;
-
-							rebuild_deletion(curr);
-						} else
-							root = nullptr;
-
-						delete curr;
-						curr = nullptr;
-					}
-				// Значит ребёнок есть и он красный!
-				} else
-				{
-					if (curr->parent)
-					{
-						if (curr == curr->parent->left)
-							curr->parent->left = curr->right;
-						else
-							curr->parent->right = curr->right;
-					} else
-						root = curr->right;
-					curr->right->parent = curr->parent;
-					curr->right->color = rb_tree_node<T>::color::black;
-
-					delete curr;
-					curr = nullptr;
-				}
-			// Удаляемая - красная
-			} else
-			{
-				if (curr == curr->parent->left)
-					curr->parent->left = curr->right;
-				else
-					curr->parent->right = curr->right;
-
-				if (curr->right)
-					curr->Right->parent = curr->parent;
-
-				delete curr;
-				curr = nullptr;
-			}
-		}
-	}
-
 	// Поиск элемента
 	template <typename X>
 	rb_tree_node<T> * search_node (const X& x)
@@ -274,6 +91,17 @@ public:
 		// Если пуст, то не нашли
 		return curr;
 	}
+
+	template <typename X>
+	void del (const X& x)
+	{
+		auto curr = search_node<X>(x);
+
+		// Значит надо удалить весь node!
+		if (curr->del(x))
+			delete_node(curr);
+	}
+	
 
 	// На вход подаётся list2_node
 	template <typename X>
@@ -488,6 +316,184 @@ private:
 		
 		if (!x->parent)
 			root = x;
+	}
+
+	// curr != nullptr
+	void delete_node (const rb_tree_node<T> *curr)
+	{
+		// Значит равен, начинаем удаление
+		// Если есть левый потомок, то ищем самый большой из меньших
+		if (curr->left)
+		{
+			if (!curr->left->right)
+			{
+				curr = curr->left;
+
+				static_cast<T&>(*curr->parent) = static_cast<T&&>(*curr);
+				
+				if (curr->color == rb_tree_node<T>::colors::black)
+				{
+					if (rb_tree_node<T>::get_color(curr->left) == rb_tree_node<T>::colors::black)
+					{
+						if (curr->left)
+						{
+							rb_tree_node<T> *temp = nullptr;
+							curr->parent->left = curr->left;
+							curr->left->parent = curr->parent;
+
+							temp = curr->left;
+							delete curr;
+							curr = temp;
+
+							rebuild_deletion(curr);
+						} else
+						{
+							rebuild_deletion(curr);
+							delete curr;
+						}
+					} else
+					{
+						rb_tree_node<T> *temp = nullptr;
+						curr->parent->left = curr->left;
+						curr->left->parent = curr->parent;
+
+						temp = curr->left;
+						delete curr;
+						curr = temp;
+
+						curr->color = rb_tree_node<T>::color::black;
+					}
+				// Удаляемая вершина - красная, значит просто переносим left
+				} else
+				{
+					if (curr->left)
+					{
+						curr->parent->left = curr->left;
+						curr->left->parent = curr->parent;
+					}
+				}
+			} else
+			{
+				rb_tree_node<T> *temp = curr;
+				for (curr = curr->left->right; curr->right ; curr = curr->right);
+
+				static_cast<T&>(*temp) = static_cast<T&&>(*curr);
+				
+				if (curr->color == rb_tree_node<T>::colors::black)
+				{
+					if (rb_tree_node<T>::get_color(curr->left) == rb_tree_node<T>::colors::black)
+					{
+						if (curr->left)
+						{
+							curr->parent->right = curr->left;
+							curr->left->parent = curr->parent;
+
+							temp = curr->left;
+							delete curr;
+							curr = temp;
+
+							rebuild_deletion(curr);
+						} else
+						{
+							rebuild_deletion(curr);
+							delete curr;
+						}
+					} else
+					{
+						curr->parent->right = curr->left;
+						curr->left->parent = curr->parent;
+						curr->left->color = rb_tree_node<T>::color::black;
+
+						delete curr;
+						curr = nullptr;
+					}
+				// Удаляемая вершина - красная, значит просто переносим left
+				} else
+				{
+					if (curr->left)
+					{
+						curr->parent->right = curr->left;
+						curr->left->parent = curr->parent;
+					}
+				}
+			}
+		// У удаляемой нет левого потомка, значит удаляем именно неё!
+		} else
+		{
+			if (curr->color == rb_tree_node<T>::colors::black)
+			{
+				if (rb_tree_node<T>::get_color(curr->right) == rb_tree_node<T>::colors::black)
+				{
+					if (curr->right)
+					{
+						curr->right->parent = curr->parent;
+
+						if (curr->parent)
+						{
+							if (curr == curr->parent->left)
+								curr->parent->left = curr->right;
+							else
+								curr->parent->right = curr->right;
+
+							rb_tree_node<T> *temp = curr->right;
+							delete curr;
+							curr = temp;
+
+							rebuild_deletion(curr);
+						} else
+						{
+							root = curr->right;
+							delete curr;
+							curr = nullptr;
+						}
+					} else
+					{
+						if (curr->parent)
+						{
+							if (curr == curr->parent->left)
+								curr->parent->left = nullptr;
+							else
+								curr->parent->right = nullptr;
+
+							rebuild_deletion(curr);
+						} else
+							root = nullptr;
+
+						delete curr;
+						curr = nullptr;
+					}
+				// Значит ребёнок есть и он красный!
+				} else
+				{
+					if (curr->parent)
+					{
+						if (curr == curr->parent->left)
+							curr->parent->left = curr->right;
+						else
+							curr->parent->right = curr->right;
+					} else
+						root = curr->right;
+					curr->right->parent = curr->parent;
+					curr->right->color = rb_tree_node<T>::color::black;
+
+					delete curr;
+					curr = nullptr;
+				}
+			// Удаляемая - красная
+			} else
+			{
+				if (curr == curr->parent->left)
+					curr->parent->left = curr->right;
+				else
+					curr->parent->right = curr->right;
+
+				if (curr->right)
+					curr->Right->parent = curr->parent;
+
+				delete curr;
+				curr = nullptr;
+			}
+		}
 	}
 
 	// Перестройка дерева

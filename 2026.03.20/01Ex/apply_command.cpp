@@ -42,15 +42,20 @@ void command::apply_insert (list2<record> *worm, rb_tree<data_tree<record, char 
 		// Если нашёл такой элемент, то добавлять его не нужно
 		if (curr->search_node(*this))
 			return;
-	}
 
-	auto new_node = worm->add_node(static_cast<record&&>(*this));
-	// Если добавление прошло успешно
-	if (new_node)
-		olha->add<list2_node<record>>(new_node);
+		auto new_node = worm->add_node(static_cast<record&&>(*this));
+		if (new_node)
+			curr->add(new_node);
+	} else
+	{
+		auto new_node = worm->add_node(static_cast<record&&>(*this));
+		// Если добавление прошло успешно
+		if (new_node)
+			olha->add<list2_node<record>>(new_node);
+	}
 }
 
-int command::apply_select (list2<record> *worm, rb_tree<data_tree<record, char *>> *olha) const
+int command::apply_select (list2<record> *worm, rb_tree<data_tree<record, char *>> *olha)
 {
 	auto curr = validate(worm, olha);
 
@@ -68,13 +73,13 @@ int command::apply_select (list2<record> *worm, rb_tree<data_tree<record, char *
 	return worm->print_sublist(curr, stdout, order);
 }
 
-void command::apply_delete (list2<record> *worm, rb_tree<data_tree<record, char *>> *olha) const
+void command::apply_delete (list2<record> *worm, rb_tree<data_tree<record, char *>> *olha)
 {
 	list2_node<record> 	*curr = validate(worm, olha),
 						*next = nullptr;
 	for (; curr ; curr = next)
 	{
-		olha->delete_node<list2_node<record>>(*curr);
+		olha->del<list2_node<record>>(*curr);
 
 		next = curr->link;
 
@@ -90,7 +95,7 @@ void command::apply_delete (list2<record> *worm, rb_tree<data_tree<record, char 
 	}
 }
 
-list2_node<record> * command::validate (list2<record> *worm, rb_tree<data_tree<record, char *>> *olha) const
+list2_node<record> * command::validate (list2<record> *worm, rb_tree<data_tree<record, char *>> *olha)
 {
 	list2_node<record> *curr = nullptr;
 
@@ -102,8 +107,7 @@ list2_node<record> * command::validate (list2<record> *worm, rb_tree<data_tree<r
 		c_name = condition::eq;
 
 		rb_tree_node<data_tree<record, char *>> *suit_node = olha->search_node<record>(*this);
-		
-		curr = olha->select_valid(*this, val);
+		curr = suit_node->select_valid<command> (*this, val);
 	} else
 	{
 		make_validator(val);

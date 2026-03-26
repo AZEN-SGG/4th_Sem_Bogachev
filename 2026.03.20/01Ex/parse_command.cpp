@@ -223,21 +223,6 @@ bool command::parse_search_terms (char *cmd)
 	char *subcmd;
 	op = operation::land;
 
-	while ((subcmd = strstr(cmd, " and ")) != nullptr)
-	{
-		subcmd[0] = '\0';
-		if (!parse_search_term(cmd))
-			return false;
-
-		op = operation::land;
-
-		subcmd += 5;
-		cmd = subcmd;
-	}
-
-	if (op == operation::land)
-		return parse_search_term(cmd);
-
 	while ((subcmd = strstr(cmd, " or ")) != nullptr)
 	{
 		subcmd[0] = '\0';
@@ -247,6 +232,21 @@ bool command::parse_search_terms (char *cmd)
 		op = operation::lor;
 
 		subcmd += 4;
+		cmd = subcmd;
+	}
+
+	if (op == operation::lor)
+		return parse_search_term(cmd);
+
+	while ((subcmd = strstr(cmd, " and ")) != nullptr)
+	{
+		subcmd[0] = '\0';
+		if (!parse_search_term(cmd))
+			return false;
+
+		op = operation::land;
+
+		subcmd += 5;
 		cmd = subcmd;
 	}
 

@@ -56,6 +56,18 @@ public:
 		return io_status::success;
 	}
 
+	io_status read_file (char *filename, const unsigned int max_read = -1)
+	{
+		FILE *fp = fopen(filename, "r");
+		if (fp == nullptr)
+			return io_status::open;
+
+		io_status ret = read(fp, max_read);
+
+		fclose(fp);
+		return ret;
+	}
+
 	io_status start (int *res)
 	{
 		io_status ret = io_status::success;
@@ -88,7 +100,7 @@ public:
 				} else
 				{
 	//				x.print();
-					(*res) += x.apply(db.get());
+					(*res) += x.apply(db.get(), fast_db.get());
 				}
 
 				fprintf(f_out, "\n");
