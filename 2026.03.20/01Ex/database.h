@@ -105,6 +105,7 @@ public:
 				{
 	//				x.print();
 					(*res) += x.apply(db.get(), fast_db.get());
+					fast_db->print(100);
 				}
 
 				fprintf(f_out, "\n");

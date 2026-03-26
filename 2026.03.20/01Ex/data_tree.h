@@ -58,6 +58,8 @@ public:
 		return *this;
 	}
 
+	void print (FILE *fp = stdout ) const { node->print(fp); }
+
 	// Подразумевается, что он не может быть без элемента!
 	int cmp (const T& x) const { return node->template cmp<X>(x); }
 	int cmp (const data_tree<T, X>& x) const { return node->template cmp<X>(x.node); }
@@ -90,9 +92,12 @@ public:
 	list2_node<T> * search_node (const T& x)
 	{
 		if (uniform)
-			return uniform->search_node(x)->node;
-
-		if (node->is_equal(x))
+		{
+			auto suit_node = uniform->search_node(x);
+			
+			if (suit_node)
+				return suit_node->node;
+		} else if (node->is_equal(x))
 			return node;
 
 		return nullptr;
@@ -112,8 +117,10 @@ public:
 				if (val(x, *(curr->node)))
 				{
 					if (prev)
+					{
 						prev->link = curr->node;
-					else
+						prev = curr->node;
+					} else
 						origin = prev = curr->node;
 				}
 
@@ -147,16 +154,16 @@ public:
 					else
 						uniform->head = curr->next;
 
+					delete curr;
+
 					if (!uniform->head)
 						return true;
 					
 					node = uniform->head->node;
-					delete curr;
 					break;
 				} else
 					prev = curr;
 			}
-
 		} else if (node == x)
 			return true;
 

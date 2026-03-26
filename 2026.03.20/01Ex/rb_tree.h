@@ -369,6 +369,7 @@ private:
 						} else
 						{
 							rebuild_deletion(curr);
+							curr->parent->left = nullptr;
 							delete curr;
 						}
 					} else
@@ -386,12 +387,11 @@ private:
 				// Удаляемая вершина - красная, значит просто переносим left
 				} else
 				{
+					curr->parent->left = curr->left;
 					if (curr->left)
-					{
-						curr->parent->left = curr->left;
 						curr->left->parent = curr->parent;
-					}
 				}
+			// Если есть правый ребёнок
 			} else
 			{
 				rb_tree_node<T> *temp = curr;
@@ -416,6 +416,7 @@ private:
 						} else
 						{
 							rebuild_deletion(curr);
+							curr->parent->right = nullptr;
 							delete curr;
 						}
 					} else
@@ -430,11 +431,9 @@ private:
 				// Удаляемая вершина - красная, значит просто переносим left
 				} else
 				{
+					curr->parent->right = curr->left;
 					if (curr->left)
-					{
-						curr->parent->right = curr->left;
 						curr->left->parent = curr->parent;
-					}
 				}
 			}
 		// У удаляемой нет левого потомка, значит удаляем именно неё!
@@ -470,12 +469,12 @@ private:
 					{
 						if (curr->parent)
 						{
+							rebuild_deletion(curr);
+
 							if (curr == curr->parent->left)
 								curr->parent->left = nullptr;
 							else
 								curr->parent->right = nullptr;
-
-							rebuild_deletion(curr);
 						} else
 							root = nullptr;
 
@@ -499,7 +498,7 @@ private:
 					delete curr;
 					curr = nullptr;
 				}
-			// Удаляемая - красная
+			// Удаляемая - красная, значит есть родитель!
 			} else
 			{
 				if (curr == curr->parent->left)
@@ -517,7 +516,7 @@ private:
 	}
 
 	// Перестройка дерева
-	static void rebuild_deletion (rb_tree_node<T> *curr)
+	void rebuild_deletion (rb_tree_node<T> *curr)
 	{
 		rb_tree_node<T> *temp = curr->parent;
 		for (; curr->parent ; curr = curr->parent)
@@ -534,7 +533,9 @@ private:
 							curr->parent->parent->left = curr->parent->right;
 						else
 							curr->parent->parent->right = curr->parent->right;
-					}
+					} else
+						root = curr->parent->right;
+
 					curr->parent->right->parent = curr->parent->parent;
 
 					temp = curr->parent->right;
@@ -595,7 +596,9 @@ private:
 						curr->parent->parent->left = temp;
 					else
 						curr->parent->parent->right = temp;
-				}
+				} else
+					root = temp;
+
 				temp->parent = curr->parent->parent;
 				curr->parent->parent = temp;
 				curr->parent->right = temp->left;
@@ -620,7 +623,8 @@ private:
 							curr->parent->parent->left = curr->parent->left;
 						else
 							curr->parent->parent->right = curr->parent->left;
-					}
+					} else
+						root = curr->parent->left;
 					curr->parent->left->parent = curr->parent->parent;
 
 					temp = curr->parent->left;
@@ -679,7 +683,8 @@ private:
 						curr->parent->parent->left = temp;
 					else
 						curr->parent->parent->right = temp;
-				}
+				} else
+					curr->parent = temp;
 				temp->parent = curr->parent->parent;
 				curr->parent->parent = temp;
 				curr->parent->left = temp->right;
