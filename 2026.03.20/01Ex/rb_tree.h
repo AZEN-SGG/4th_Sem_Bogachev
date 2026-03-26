@@ -390,6 +390,9 @@ private:
 					curr->parent->left = curr->left;
 					if (curr->left)
 						curr->left->parent = curr->parent;
+
+					delete curr;
+					curr = nullptr;
 				}
 			// Если есть правый ребёнок
 			} else
@@ -434,6 +437,9 @@ private:
 					curr->parent->right = curr->left;
 					if (curr->left)
 						curr->left->parent = curr->parent;
+
+					delete curr;
+					curr = nullptr;
 				}
 			}
 		// У удаляемой нет левого потомка, значит удаляем именно неё!
