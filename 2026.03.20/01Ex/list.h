@@ -99,7 +99,7 @@ public:
 	}
 
 	template <typename X>
-	io_status add (const X *x)
+	io_status add (X *x)
 	{
 		auto curr = new (std::nothrow) list_node<T>();
 		if (!curr)
@@ -109,6 +109,8 @@ public:
 
 		curr->next = head;
 		head = curr;
+
+		return io_status::success;
 	}
 
 	template <typename X>

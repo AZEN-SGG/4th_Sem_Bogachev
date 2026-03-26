@@ -314,7 +314,7 @@ private:
 		buf->next = head;
 		head = buf;
 
-		return io_status::success;
+		return buf;
 	}
 };
 

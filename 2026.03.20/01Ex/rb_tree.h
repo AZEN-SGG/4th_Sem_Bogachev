@@ -93,9 +93,9 @@ public:
 	}
 
 	template <typename X>
-	void del (const X& x)
+	void del (X *x)
 	{
-		auto curr = search_node<X>(x);
+		auto curr = search_node<X>(*x);
 
 		// Значит надо удалить весь node!
 		if (curr->del(x))
@@ -319,7 +319,7 @@ private:
 	}
 
 	// curr != nullptr
-	void delete_node (const rb_tree_node<T> *curr)
+	void delete_node (rb_tree_node<T> *curr)
 	{
 		// Значит равен, начинаем удаление
 		// Если есть левый потомок, то ищем самый большой из меньших
@@ -361,7 +361,7 @@ private:
 						delete curr;
 						curr = temp;
 
-						curr->color = rb_tree_node<T>::color::black;
+						curr->color = rb_tree_node<T>::colors::black;
 					}
 				// Удаляемая вершина - красная, значит просто переносим left
 				} else
@@ -402,7 +402,7 @@ private:
 					{
 						curr->parent->right = curr->left;
 						curr->left->parent = curr->parent;
-						curr->left->color = rb_tree_node<T>::color::black;
+						curr->left->color = rb_tree_node<T>::colors::black;
 
 						delete curr;
 						curr = nullptr;
@@ -474,7 +474,7 @@ private:
 					} else
 						root = curr->right;
 					curr->right->parent = curr->parent;
-					curr->right->color = rb_tree_node<T>::color::black;
+					curr->right->color = rb_tree_node<T>::colors::black;
 
 					delete curr;
 					curr = nullptr;
@@ -488,7 +488,7 @@ private:
 					curr->parent->right = curr->right;
 
 				if (curr->right)
-					curr->Right->parent = curr->parent;
+					curr->right->parent = curr->parent;
 
 				delete curr;
 				curr = nullptr;
@@ -538,7 +538,7 @@ private:
 					if (rb_tree_node<T>::get_color(curr->parent->right->left) == rb_tree_node<T>::colors::black)
 					{
 						curr->parent->right->color = rb_tree_node<T>::colors::red;
-						curr = rb_tree_node<T>::colors::black;
+						curr->color = rb_tree_node<T>::colors::black;
 
 						if (curr->parent->color == rb_tree_node<T>::colors::red)
 						{
@@ -584,7 +584,7 @@ private:
 				temp->left = curr->parent;
 
 				temp->color = curr->parent->color;
-				temp->right->color == rb_tree_node<T>::colors::black;
+				temp->right->color = rb_tree_node<T>::colors::black;
 				curr->parent->color = rb_tree_node<T>::colors::black;
 
 				break;
@@ -623,7 +623,7 @@ private:
 					if (rb_tree_node<T>::get_color(curr->parent->left->right) == rb_tree_node<T>::colors::black)
 					{
 						curr->parent->left->color = rb_tree_node<T>::colors::red;
-						curr = rb_tree_node<T>::colors::black;
+						curr->color = rb_tree_node<T>::colors::black;
 
 						if (curr->parent->color == rb_tree_node<T>::colors::red)
 						{
@@ -668,7 +668,7 @@ private:
 				temp->right = curr->parent;
 
 				temp->color = curr->parent->color;
-				temp->left->color == rb_tree_node<T>::colors::black;
+				temp->left->color = rb_tree_node<T>::colors::black;
 				curr->parent->color = rb_tree_node<T>::colors::black;
 
 				break;

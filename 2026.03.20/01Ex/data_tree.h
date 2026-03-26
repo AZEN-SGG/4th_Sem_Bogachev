@@ -9,6 +9,7 @@
 #include "validator.h"
 
 #include <memory>
+#include <utility>
 
 template <typename T, typename X>
 class data_tree;
@@ -20,15 +21,15 @@ private:
 	list2_node<T> *node = nullptr;
 
 public:
-	data_list<T> () = default;
-	~data_list<T> () = default;
+	data_list () = default;
+	~data_list () = default;
 
-	bool is_equal (T& x) { return node->is_equal(x); }
+	bool is_equal (const T& x) { return node->is_equal(x); }
 
 	void add (list2_node<T> *x) { node = x; }
 
 	template <typename U, typename X>
-	class data_tree;
+	friend class data_tree;
 };
 
 
@@ -42,6 +43,20 @@ private:
 public:
 	data_tree () = default;
 	~data_tree () = default;
+
+	data_tree& operator= (const data_tree&) = delete;
+	data_tree& operator= (data_tree&& x)
+	{
+		if (this != &x)
+		{
+			uniform = std::move(x.uniform);
+
+			node = x.node;
+			x.node = nullptr;
+		}
+
+		return *this;
+	}
 
 	// Подразумевается, что он не может быть без элемента!
 	int cmp (const T& x) const { return node->template cmp<X>(x); }
@@ -72,10 +87,10 @@ public:
 		return ret;
 	}
 
-	list_node<T> * search_node (const T& x) const
+	list2_node<T> * search_node (const T& x)
 	{
 		if (uniform)
-			return uniform->search_node(x);
+			return uniform->search_node(x)->node;
 
 		if (node->is_equal(x))
 			return node;
@@ -99,13 +114,16 @@ public:
 					if (prev)
 						prev->link = curr->node;
 					else
-						origin = prev = curr;
+						origin = prev = curr->node;
 				}
 
 			return origin;
 		} else
 			if (val(x, *node))
 				return node;
+
+		// Ничего не нашли
+		return nullptr;
 	}
 
 	bool del (list2_node<T> *x)
@@ -126,7 +144,7 @@ public:
 					if (!uniform->head)
 						return true;
 					
-					node = uniform->head;
+					node = uniform->head->node;
 					delete curr;
 					break;
 				} else

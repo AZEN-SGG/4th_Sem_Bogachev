@@ -79,7 +79,7 @@ void command::apply_delete (list2<record> *worm, rb_tree<data_tree<record, char 
 						*next = nullptr;
 	for (; curr ; curr = next)
 	{
-		olha->del<list2_node<record>>(*curr);
+		olha->del<list2_node<record>>(curr);
 
 		next = curr->link;
 
