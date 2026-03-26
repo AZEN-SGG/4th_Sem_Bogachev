@@ -44,8 +44,12 @@ public:
 
 			*curr = (list2_node<record> &&)buf;
 			db->add(curr);
-			fast_db->add<list2_node<record>>(curr);
 
+			auto new_node = fast_db->add<list2_node<record>>(curr);
+			if (!new_node)
+				return io_status::memory;
+
+			fast_db->fix_tree(new_node);
 			i++;
 		} if ((!feof(fp)) && (i < max_read))
 		{

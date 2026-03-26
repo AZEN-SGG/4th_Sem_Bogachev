@@ -51,7 +51,10 @@ void command::apply_insert (list2<record> *worm, rb_tree<data_tree<record, char 
 		auto new_node = worm->add_node(static_cast<record&&>(*this));
 		// Если добавление прошло успешно
 		if (new_node)
-			olha->add<list2_node<record>>(new_node);
+		{
+			auto new_leaf = olha->add<list2_node<record>>(new_node);
+			olha->fix_tree(new_leaf);
+		}
 	}
 }
 
@@ -107,6 +110,10 @@ list2_node<record> * command::validate (list2<record> *worm, rb_tree<data_tree<r
 		c_name = condition::eq;
 
 		rb_tree_node<data_tree<record, char *>> *suit_node = olha->search_node<record>(*this);
+		// Не нашли узла с таким именем
+		if (!suit_node)
+			return nullptr;
+
 		curr = suit_node->select_valid<command> (*this, val);
 	} else
 	{

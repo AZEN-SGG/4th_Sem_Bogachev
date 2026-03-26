@@ -117,10 +117,16 @@ public:
 						origin = prev = curr->node;
 				}
 
+			if (prev)
+				prev->link = nullptr;
+
 			return origin;
 		} else
 			if (val(x, *node))
+			{
+				node->link = nullptr;
 				return node;
+			}
 
 		// Ничего не нашли
 		return nullptr;

@@ -7,6 +7,7 @@
 #include <new>
 
 class database;
+class command;
 
 template <typename T>
 class rb_tree
@@ -76,7 +77,7 @@ public:
 		while (curr)
 		{
 			// Сравниваем
-			int cmp = curr->cmp(x);
+			int cmp = -curr->cmp(x);
 
 			// Если меньше, то в левое
 			if (cmp < 0)
@@ -102,12 +103,33 @@ public:
 			delete_node(curr);
 	}
 	
+	void print (const int r, FILE *fp = stdout) const {	print_subtree(root, 0, r, fp); }
+
+	friend class database;
+	friend class command;
+private:
+	void erase () { delete_subtree(root); root = nullptr; }
 
 	// На вход подаётся list2_node
 	template <typename X>
-	io_status add (X *x)
+	rb_tree_node<T> * add (X *x)
 	{
+
+		if (!root)
+		{
+			root = new (std::nothrow) rb_tree_node<T>();
+			if (!root)
+				return nullptr;
+
+			root->color = rb_tree_node<T>::colors::black;
+			
+			if (root->add(x) != io_status::success)
+				return nullptr;
+			return root;
+		}
+
 		auto curr = root;
+
 		while (true)
 		{
 			int cmp = curr->cmp(*x);
@@ -118,7 +140,7 @@ public:
 				{
 					auto temp = new (std::nothrow) rb_tree_node<T>();
 					if (!temp)
-						return io_status::memory;
+						return nullptr;
 
 					curr->left = temp;
 					temp->parent = curr;
@@ -134,7 +156,7 @@ public:
 				{
 					auto temp = new (std::nothrow) rb_tree_node<T>();
 					if (!temp)
-						return io_status::memory;
+						return nullptr;
 
 					curr->right = temp;
 					temp->parent = curr;
@@ -148,14 +170,12 @@ public:
 				break;
 		}
 		
-		return curr->add(x);
+		if (curr->add(x) != io_status::success)
+			return nullptr;
+
+		return curr;
 	}
 
-	void print (const int r, FILE *fp = stdout) const {	print_subtree(root, 0, r, fp); }
-
-	friend class database;
-private:
-	void erase () { delete_subtree(root); root = nullptr; }
 
 	void add_node (rb_tree_node<T> *x)
 	{
