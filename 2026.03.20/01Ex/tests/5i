@@ -1,0 +1,27 @@
+insert (Tema, 666, 209);
+insert (Mamay, 777, 211);
+insert (Navalny, 228, 109);
+select * where name = Alice order by name;
+select * where group <> 102 order by phone;
+delete where name like ____;
+select phone where name = Navalny;
+select * where phone > 200 order by group;
+select group where phone <= 456 order by name, phone, group;
+select * where group >= 102 order by name, phone, group;
+select * where name like A% order by name, group;
+select * where name like B_ order by name, phone;
+select * where name like [C-H]% order by group, name;
+select * where name like [^A-C]% order by name, phone, group;
+select * where name like A\% order by name, phone, group;
+select * where name like B\_ order by name, phone, group;
+select * where name like C\[1-2\] order by name, phone, group;
+select * where name like E\\\\F order by name, phone, group;
+select * where name not like A% order by name, phone, group;
+select * where name not like [A-C]% order by name, phone, group;
+select * where phone = 123 and group = 101 order by name, phone, group;
+select * where name like A% and phone = 123 and group = 101 order by name, phone, group;
+select * where name = Alice or group = 102 order by name, phone, group;
+select * where name = Alice or group = 102 or phone = 789 order by name, phone, group;
+select group, name where name = Alice order by name, phone, group;
+quit;
+
