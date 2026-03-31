@@ -7,20 +7,20 @@
 #include "record.h"
 
 
-int command::apply (list2<record> *worm, name_index_t *name_index)
+int command::apply (list2<record> *worm, name_index_t *name_index, phone_index_t *phone_index)
 {
 	int res = 0;
 
 	switch (type)
 	{
 		case command_type::insert:
-			apply_insert(worm, name_index);
+			apply_insert(worm, name_index, phone_index);
 			break;
 		case command_type::select:
-			res = apply_select(worm, name_index);
+			res = apply_select(worm, name_index, phone_index);
 			break;
 		case command_type::del:
-			apply_delete(worm, name_index);
+			apply_delete(worm, name_index, phone_index);
 			break;
 		case command_type::quit:
 			break;
@@ -32,34 +32,48 @@ int command::apply (list2<record> *worm, name_index_t *name_index)
 }
 
 // Бинарный поиск одинакового элемента при добавлении
-void command::apply_insert (list2<record> *worm, name_index_t *name_index)
+void command::apply_insert (list2<record> *worm, name_index_t *name_index, phone_index_t *phone_index)
 {
-	auto curr = name_index->search_node<record>(static_cast<const record&>(*this));
+	// Ищем по телефону, так как поиск по нему быстрее
+	auto phone_curr = phone_index->search_node(static_cast<const record&>(*this));
+
 	// В дереве есть список с таким же именем, ищем элемент в этом списке
-	if (curr)
+	if (phone_curr)
 	{
 		// Если нашёл такой элемент, то добавлять его не нужно
-		if (curr->search_node(*this))
+		if (phone_curr->search_node(*this))
 			return;
 
 		auto new_node = worm->add_node(static_cast<record&&>(*this));
-		if (new_node)
-			curr->add(new_node);
+		if (!new_node)
+			return;
+
+		auto name_curr = name_index->search_node(static_cast<const record&>(*this));
+		// Вообще такого быть не может!
+		if (!name_curr)
+			return;
+		
+		phone_curr->add(new_node);
+		name_curr->add(new_node);
 	} else
 	{
 		auto new_node = worm->add_node(static_cast<record&&>(*this));
 		// Если добавление прошло успешно
 		if (new_node)
 		{
-			auto new_leaf = name_index->add<list2_node<record>>(new_node);
-			name_index->fix_tree(new_leaf);
+			auto name_leaf = name_index->add(new_node);
+			name_index->fix_tree(name_leaf);
+			
+			auto phone_leaf = phone_index->add(new_node);
+			phone_index->fix_tree(phone_leaf);
 		}
 	}
 }
 
-int command::apply_select (list2<record> *worm, name_index_t *name_index)
+int command::apply_select (list2<record> *worm, name_index_t *name_index, phone_index_t *phone_index)
 {
-	auto curr = validate(worm, name_index);
+	// Получили head подсписка
+	auto curr = validate(worm, name_index, phone_index);
 
 	if (order_by[0] != ordering::none)
 	{
@@ -75,13 +89,14 @@ int command::apply_select (list2<record> *worm, name_index_t *name_index)
 	return worm->print_sublist(curr, stdout, order);
 }
 
-void command::apply_delete (list2<record> *worm, name_index_t *name_index)
+void command::apply_delete (list2<record> *worm, name_index_t *name_index, phone_index_t *phone_index)
 {
-	list2_node<record> 	*curr = validate(worm, name_index),
+	list2_node<record> 	*curr = validate(worm, name_index, phone_index),
 						*next = nullptr;
 	for (; curr ; curr = next)
 	{
-		name_index->del<list2_node<record>>(curr);
+		name_index->del(curr);
+		phone_index->del(curr);
 
 		next = curr->link;
 
@@ -97,12 +112,27 @@ void command::apply_delete (list2<record> *worm, name_index_t *name_index)
 	}
 }
 
-list2_node<record> * command::validate (list2<record> *worm, name_index_t *name_index)
+list2_node<record> * command::validate (list2<record> *worm, name_index_t *name_index, phone_index_t *phone_index)
 {
+	worm->clear_links();
 	list2_node<record> *curr = nullptr;
 
 	validator<command, record> val;
-	if (op == operation::land && c_name == condition::eq)
+	if (c_phone == condition::eq)
+	{
+		if (c_name == condition::eq)
+		{
+			if (op == operation::land)
+			{
+			} else (op == operation::lor && c_group == condition::none)
+			{
+
+			}
+		} else
+		{
+
+		}
+	} else if (c_name == condition::eq && op == operation::land)
 	{
 		c_name = condition::none;
 		make_validator(val);

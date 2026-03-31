@@ -48,11 +48,16 @@ public:
 			*curr = (list2_node<record> &&)buf;
 			db->add(curr);
 
-			auto new_node = name_index->add<list2_node<record>>(curr);
-			if (!new_node)
+			auto name_node = name_index->add(curr);
+			if (!name_node)
 				return io_status::memory;
+			name_index->fix_tree(name_node);
 
-			name_index->fix_tree(new_node);
+			auto phone_node = phone_index->add(curr);
+			if (!phone_node)
+				return io_status::memory;
+			phone_index->fix_tree(phone_node);
+
 			i++;
 		} if ((!feof(fp)) && (i < max_read))
 		{
@@ -107,8 +112,9 @@ public:
 				} else
 				{
 //					x.print();
-					(*res) += x.apply(db.get(), name_index.get());
-//					fast_db->print(100);
+					(*res) += x.apply(db.get(), name_index.get(), phone_index.get());
+//					name_index->print(100);
+//					phone_index->print(100);
 				}
 
 				fprintf(f_out, "\n");

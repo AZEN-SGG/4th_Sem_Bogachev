@@ -288,6 +288,12 @@ private:
 		head = nullptr;
 	}
 
+	void clear_links ()
+	{
+		for (auto curr = head ; curr ; curr = curr->next)
+			curr->link = nullptr;
+	}
+
 	void add (list2_node<T> *curr)
 	{
 		if (head)
