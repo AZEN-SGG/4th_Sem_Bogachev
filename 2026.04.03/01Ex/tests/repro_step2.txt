@@ -1,0 +1,3 @@
+delete where name = f;
+delete where name = h;
+quit;
