@@ -113,8 +113,8 @@ public:
 				{
 //					x.print();
 					(*res) += x.apply(db.get(), name_index.get(), phone_index.get());
-//					name_index->print(100);
-//					phone_index->print(100);
+					name_index->print(100);
+					phone_index->print(100);
 				}
 
 				fprintf(f_out, "\n");

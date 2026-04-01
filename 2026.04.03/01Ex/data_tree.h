@@ -150,6 +150,46 @@ public:
 		return nullptr;
 	}
 
+	list2_node<T> * select_all (list2_node<T> **last = nullptr) const
+	{
+		// Выбор идёт последовательно - это важно!
+		if (uniform)
+		{
+			list2_node<T> 	*origin = nullptr,
+							*prev 	= nullptr;
+
+			list_node<data_list<T>> *curr = uniform->head;
+			for (; curr ; curr = curr->next)
+				if (!curr->node->link)
+				{
+					if (prev)
+					{
+						prev->link = curr->node;
+						prev = curr->node;
+					} else
+						origin = prev = curr->node;
+				}
+
+			if (prev)
+				prev->link = prev;
+
+			if (last)
+				*last = prev;
+
+			return origin;
+		} else
+		{
+			node->link = node;
+			if (last)
+				*last = node;
+
+			return node;
+		}
+
+		// Ничего не нашли
+		return nullptr;
+	}
+
 	bool del (list2_node<T> *x)
 	{
 		if (uniform)

@@ -167,7 +167,7 @@ public:
 			}
 
 		if (prev)
-			prev->link = nullptr;
+			prev->link = prev;
 
 		if (last)
 			*last = prev;

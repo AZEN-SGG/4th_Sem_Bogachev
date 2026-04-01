@@ -43,30 +43,28 @@ void command::apply_insert (list2<record> *worm, name_index_t *name_index, phone
 		// Если нашёл такой элемент, то добавлять его не нужно
 		if (phone_curr->search_node(*this))
 			return;
+	}
+	
+	auto new_node = worm->add_node(static_cast<record&&>(*this));
 
-		auto new_node = worm->add_node(static_cast<record&&>(*this));
-		if (!new_node)
-			return;
+	if (!new_node)
+		return;
 
-		auto name_curr = name_index->search_node(static_cast<const record&>(*this));
-		// Вообще такого быть не может!
-		if (!name_curr)
-			return;
-		
+	if (phone_curr)
 		phone_curr->add(new_node);
-		name_curr->add(new_node);
-	} else
+	else
 	{
-		auto new_node = worm->add_node(static_cast<record&&>(*this));
-		// Если добавление прошло успешно
-		if (new_node)
-		{
-			auto name_leaf = name_index->add(new_node);
-			name_index->fix_tree(name_leaf);
-			
-			auto phone_leaf = phone_index->add(new_node);
-			phone_index->fix_tree(phone_leaf);
-		}
+		auto phone_leaf = phone_index->add(new_node);
+		phone_index->fix_tree(phone_leaf);
+	}
+
+	auto name_curr = name_index->search_node(static_cast<const record&>(*this));
+	if (name_curr)
+		name_curr->add(new_node);
+	else
+	{
+		auto name_leaf = name_index->add(new_node);
+		name_index->fix_tree(name_leaf);
 	}
 }
 
@@ -115,36 +113,26 @@ void command::apply_delete (list2<record> *worm, name_index_t *name_index, phone
 list2_node<record> * command::validate (list2<record> *worm, name_index_t *name_index, phone_index_t *phone_index)
 {
 	worm->clear_links();
-	list2_node<record> *curr = nullptr,
+	list2_node<record> 	*curr = nullptr,
 						*last = nullptr;
 
 	validator<command, record> val;
-	if (c_phone == condition::eq)
-	{
-		if (c_name == condition::eq && op == operation::lor && c_group == condition::none)
+	if (c_name == condition::eq
+		&& c_phone == condition::eq
+		&& c_group == condition::none
+		&& op == operation::lor 
+	) {
+		auto suit_phone = phone_index->search_node<record>(*this);
+		// Нашли узел с таким телефоном
+		if (suit_phone)
+			curr = suit_phone->select_all(&last);
+
+		auto suit_name = name_index->search_node<record>(*this);
+		// Нашли узел с таким именем, берём все элементы
+		if (suit_name)
 		{
-			c_phone = condition::none;
-			make_validator(val);
-			c_phone = condition::eq;
-
-			auto suit_phone = phone_index->search_node<record>(*this);
-			// Не нашли узла с таким телефоном
-			if (!suit_phone)
-				return nullptr;
-			
-			curr = suit_phone->select_valid<command> (*this, val, &last);
-
-			c_name = condition::none;
-			make_validator(val);
-			c_name = condition::eq;
-			
-			auto suit_name = name_index->search_node<record>(*this);
-			// Нет узла с таким именем, возвращаем найденные имена
-			if (!suit_name)
-				return curr;
-
 			list2_node<record> *temp = nullptr,
-				*curr_by_name = suit_name->select_valid<command>(*this, val, &temp);
+				*curr_by_name = suit_name->select_all(&temp);
 
 			if (last)
 				last->link = curr_by_name;
@@ -152,19 +140,19 @@ list2_node<record> * command::validate (list2<record> *worm, name_index_t *name_
 				curr = curr_by_name;
 
 			last = temp;
-		} else
-		{
-			c_phone = condition::none;
-			make_validator(val);
-			c_phone = condition::eq;
-
-			auto suit_node = phone_index->search_node<record>(*this);
-			// Не нашли узла с таким номером
-			if (!suit_node)
-				return nullptr;
-
-			curr = suit_node->select_valid<command> (*this, val, &last);
 		}
+	} else if (c_phone == condition::eq && op == operation::land)
+	{
+		c_phone = condition::none;
+		make_validator(val);
+		c_phone = condition::eq;
+
+		auto suit_node = phone_index->search_node<record>(*this);
+		// Не нашли узла с таким номером
+		if (!suit_node)
+			return nullptr;
+
+		curr = suit_node->select_valid<command>(*this, val, &last);
 	} else if (c_name == condition::eq && op == operation::land)
 	{
 		c_name = condition::none;
