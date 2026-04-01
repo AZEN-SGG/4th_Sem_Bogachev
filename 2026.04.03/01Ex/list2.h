@@ -152,7 +152,7 @@ public:
 	}
 
 	template <typename X>
-	list2_node<T> * select_valid (const X& x, validator<X, T> &val) const
+	list2_node<T> * select_valid (const X& x, validator<X, T> &val, list2_node<T> **last = nullptr) const
 	{
 		list2_node<T> *origin = nullptr, *prev = nullptr;
 		for (auto *curr = head ; curr ; curr = curr->next)
@@ -168,6 +168,9 @@ public:
 
 		if (prev)
 			prev->link = nullptr;
+
+		if (last)
+			*last = prev;
 
 		return origin;
 	}

@@ -105,7 +105,7 @@ public:
 	}
 
 	template <typename U>
-	list2_node<T> * select_valid (const U& x, validator<U, T>& val) const
+	list2_node<T> * select_valid (const U& x, validator<U, T>& val, list2_node<T> **last = nullptr) const
 	{
 		// Выбор идёт последовательно - это важно!
 		if (uniform)
@@ -117,22 +117,32 @@ public:
 			for (; curr ; curr = curr->next)
 				if (val(x, *(curr->node)))
 				{
-					if (prev)
+					// Если нет следующего, значит его ещё не находили 
+					if (!curr->node->link)
 					{
-						prev->link = curr->node;
-						prev = curr->node;
-					} else
-						origin = prev = curr->node;
+						if (prev)
+						{
+							prev->link = curr->node;
+							prev = curr->node;
+						} else
+							origin = prev = curr->node;
+					}
 				}
 
 			if (prev)
-				prev->link = nullptr;
+				prev->link = prev;
+
+			if (last)
+				*last = prev;
 
 			return origin;
 		} else
 			if (val(x, *node))
 			{
-				node->link = nullptr;
+				node->link = node;
+				if (last)
+					*last = node;
+
 				return node;
 			}
 

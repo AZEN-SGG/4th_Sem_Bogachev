@@ -115,22 +115,55 @@ void command::apply_delete (list2<record> *worm, name_index_t *name_index, phone
 list2_node<record> * command::validate (list2<record> *worm, name_index_t *name_index, phone_index_t *phone_index)
 {
 	worm->clear_links();
-	list2_node<record> *curr = nullptr;
+	list2_node<record> *curr = nullptr,
+						*last = nullptr;
 
 	validator<command, record> val;
 	if (c_phone == condition::eq)
 	{
-		if (c_name == condition::eq)
+		if (c_name == condition::eq && op == operation::lor && c_group == condition::none)
 		{
-			if (op == operation::land)
-			{
-			} else (op == operation::lor && c_group == condition::none)
-			{
+			c_phone = condition::none;
+			make_validator(val);
+			c_phone = condition::eq;
 
-			}
+			auto suit_phone = phone_index->search_node<record>(*this);
+			// Не нашли узла с таким телефоном
+			if (!suit_phone)
+				return nullptr;
+			
+			curr = suit_phone->select_valid<command> (*this, val, &last);
+
+			c_name = condition::none;
+			make_validator(val);
+			c_name = condition::eq;
+			
+			auto suit_name = name_index->search_node<record>(*this);
+			// Нет узла с таким именем, возвращаем найденные имена
+			if (!suit_name)
+				return curr;
+
+			list2_node<record> *temp = nullptr,
+				*curr_by_name = suit_name->select_valid<command>(*this, val, &temp);
+
+			if (last)
+				last->link = curr_by_name;
+			else
+				curr = curr_by_name;
+
+			last = temp;
 		} else
 		{
+			c_phone = condition::none;
+			make_validator(val);
+			c_phone = condition::eq;
 
+			auto suit_node = phone_index->search_node<record>(*this);
+			// Не нашли узла с таким номером
+			if (!suit_node)
+				return nullptr;
+
+			curr = suit_node->select_valid<command> (*this, val, &last);
 		}
 	} else if (c_name == condition::eq && op == operation::land)
 	{
@@ -138,17 +171,21 @@ list2_node<record> * command::validate (list2<record> *worm, name_index_t *name_
 		make_validator(val);
 		c_name = condition::eq;
 
-		auto *suit_node = name_index->search_node<record>(*this);
+		auto suit_node = name_index->search_node<record>(*this);
 		// Не нашли узла с таким именем
 		if (!suit_node)
 			return nullptr;
 
-		curr = suit_node->select_valid<command> (*this, val);
+		curr = suit_node->select_valid<command> (*this, val, &last);
 	} else
 	{
 		make_validator(val);
-		curr = worm->select_valid(*this, val);
+		curr = worm->select_valid(*this, val, &last);
 	}
+
+	// Чтобы последний считался за найденный он указывает сам на себя!
+	if (last)
+		last->link = nullptr;
 
 	return curr;
 }
