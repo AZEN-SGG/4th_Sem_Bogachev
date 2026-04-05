@@ -12,6 +12,12 @@
 #include <memory>
 
 template <typename T>
+class search_structure_store;
+
+template <typename T, ordering X>
+class index_array;
+
+template <typename T>
 class index_trees
 {
 public:
@@ -23,6 +29,27 @@ private:
 	std::unique_ptr<phone_index_t> phone_index = nullptr;
 
 public:
+	index_trees ()
+	{
+		name_index = std::make_unique<name_index_t>();
+		phone_index = std::make_unique<phone_index_t>();
+	}
+
+	template <typename U, ordering X>
+	friend class index_array;
+	friend class search_structure_store<T>;
+
+private:
+	void erase () { name_index->erase(); phone_index->erase(); }
+	list2_node<T> * search_node (const T& x)
+	{ 
+		auto node =  phone_index->search_node(x);
+		if (!node)
+			return nullptr;
+
+		return node->search_node(x);
+	}
+
 	io_status add (list2_node<T> *x)
 	{
 		auto name_node = name_index->add(x);
@@ -38,14 +65,10 @@ public:
 		return io_status::success;
 	}
 
-private:
-	list2_node<T> * search_node (const T& x)
+	void del (list2_node<T> *x)
 	{
-		auto node = phone_index->search_node(x);
-		if (!node)
-			return nullptr;
-
-		return node->search_node(x);
+		name_index->del(x);
+		phone_index->del(x);
 	}
 };
 
@@ -64,14 +87,19 @@ public:
 	index_array (const index_array& x) = delete;
 	index_array & operator= (const index_array& x) = delete;
 
+	friend class search_structure_store<T>;
+
+private:
+	void erase () { for (int i = 0 ; i < max_size ; ++i) hash[i]->erase(); }
+	list2_node<T> * search_node (const T& x) { return hash[x->template get_hash<X>()].search_node(x); }
+
 	io_status add (list2_node<T> *x)
 	{
 		hash[x->template get_hash<X>()].add(x);
 		return io_status::success;
 	}
 
-private:
-	list2_node<T> * search_node (const T& x) { return hash[x->template get_hash<X>()].search_node(x); }
+	void del (list2_node<T> *x) { hash[static_cast<T*>(x->template get_hash<X>())].del(x); }
 };
 
 template <typename T>
@@ -91,14 +119,24 @@ public:
 	search_structure_store (const search_structure_store& x) = delete;
 	search_structure_store & operator= (const search_structure_store& x) = delete;
 
+	friend class database;
+
+private:
+	void erase () { trees->erase(); hash->erase(); }
+	list2_node<T> * search_node (const T& x) { return hash->search_node(x); }
+
+	// Приватная, так как эти классы обязательно содержатся в базе, они не существуют отдельно!
 	io_status add (list2_node<T> *x)
 	{
 		trees->add(x);
 		hash->add(x);
 	}
 
-private:
-	list2_node<T> * search_node (const T& x) { return hash->search_node(x); }
+	void del (list2_node<T> *curr)
+	{
+		trees->del(curr);
+		hash->del(curr);
+	}
 };
 
 #endif // FAST_SEARCH_H

@@ -6,9 +6,8 @@
 
 #include <new>
 
-template <typename X>
-class ;
-class command;
+template <typename U>
+class index_trees;
 
 template <typename T>
 class rb_tree
@@ -106,7 +105,8 @@ public:
 	
 	void print (const int r, FILE *fp = stdout) const {	print_subtree(root, 0, r, fp); }
 
-	friend class command;
+	template <typename U>
+	friend class index_trees;
 private:
 	void erase () { delete_subtree(root); root = nullptr; }
 

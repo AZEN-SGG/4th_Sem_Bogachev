@@ -7,20 +7,20 @@
 #include "record.h"
 
 
-int command::apply (list2<record> *worm, database<record> *db)
+int command::apply (database<record> *db)
 {
 	int res = 0;
 
 	switch (type)
 	{
 		case command_type::insert:
-			apply_insert(worm, db, phone_index);
+			apply_insert(worm, db);
 			break;
 		case command_type::select:
-			res = apply_select(worm, db, phone_index);
+			res = apply_select(worm, db);
 			break;
 		case command_type::del:
-			apply_delete(worm, db, phone_index);
+			apply_delete(worm, db);
 			break;
 		case command_type::quit:
 			break;
@@ -32,26 +32,17 @@ int command::apply (list2<record> *worm, database<record> *db)
 }
 
 // Бинарный поиск одинакового элемента при добавлении
-void command::apply_insert (list2<record> *worm, database<record> *db)
+void command::apply_insert (database<record> *db)
 {
-	// Ищем по телефону, так как поиск по нему быстрее
-	auto phone_curr = db->search_node(static_cast<const record&>(*this));
-
-	// В дереве есть список с таким же именем, ищем элемент в этом списке
-	if (phone_curr)
-	{
-		// Если нашёл такой элемент, то добавлять его не нужно
-		if (phone_curr->search_node(*this))
-			return;
-	}
-	
-	db->add(*this);
+	auto node = db->search_node(static_cast<const record&>(*this));
+	if (!node)
+		db->add(static_cast<record &&>(*this));
 }
 
-int command::apply_select (list2<record> *worm, database<record> *db)
+int command::apply_select (database<record> *db)
 {
 	// Получили head подсписка
-	auto curr = validate(worm, db, phone_index);
+	auto curr = validate(worm, db);
 
 	if (order_by[0] != ordering::none)
 	{
@@ -60,37 +51,20 @@ int command::apply_select (list2<record> *worm, database<record> *db)
 		make_cmp(comp);
 
 		// Sort list
-		curr = worm->sort(curr, comp);
+		curr = db->sort_selected(curr, comp);
 	}
 
 	// Print
-	return worm->print_sublist(curr, stdout, order);
+	return db->print_selected(curr, stdout, order);
 }
 
-void command::apply_delete (list2<record> *worm, database<record> *db)
+void command::apply_delete (database<record> *db)
 {
-	list2_node<record> 	*curr = validate(worm, db, phone_index),
-						*next = nullptr;
-	for (; curr ; curr = next)
-	{
-		db->del(curr);
-		phone_index->del(curr);
-
-		next = curr->link;
-
-		if (curr->prev)
-			curr->prev->next = curr->next;
-		else
-			worm->head = curr->next;
-
-		if (curr->next)
-			curr->next->prev = curr->prev;
-
-		delete curr;
-	}
+	auto curr = validate(db);
+	db->del(curr);
 }
 
-list2_node<record> * command::validate (list2<record> *worm, database<record> *db)
+list2_node<record> * command::validate (database<record> *db)
 {
 	list2_node<record> 	*curr = nullptr,
 						*last = nullptr;

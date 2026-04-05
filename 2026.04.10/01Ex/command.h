@@ -95,12 +95,12 @@ class command : public record, public pattern
 		static void print_condition (FILE *fp, const condition cond);
 		static void print_operation (FILE *fp, const operation op);
 		
-		int apply (list2<record> *worm, database<record> *db);
-		void apply_insert (list2<record> *worm, database<record> *db);
-		int apply_select (list2<record> *worm, database<record> *db);
-		void apply_delete (list2<record> *worm, database<record> *db);
+		int apply (database<record> *db);
+		void apply_insert (database<record> *db);
+		int apply_select (database<record> *db);
+		void apply_delete (database<record> *db);
 
-		list2_node<record> * validate (list2<record> *worm, database<record> *db);
+		list2_node<record> * validate (database<record> *db);
 		void make_validator (validator<command, record>& val) const;
 		bool is_true (record&) const;
 		bool is_false (record&) const;

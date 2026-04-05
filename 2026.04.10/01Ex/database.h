@@ -33,15 +33,15 @@ public:
 		if (!new_node)
 			return io_status::memory;
 
-		indexes->add(new_node);
+		auto ret = indexes->add(new_node);
+		if (ret != io_status::success)
+			return ret;
 
+		return io_status::success;
 	}
 
 	io_status read (FILE *fp, const unsigned int max_read = -1)
 	{
-		if (db == nullptr || indexes == nullptr)
-			return io_status::memory;
-
 		list2_node<T> buf = {},
 			*curr = nullptr;
 
@@ -73,8 +73,29 @@ public:
 		return io_status::success;
 	}
 
+	void del (list2_node<T> *curr)
+	{
+		list2_node<T> *next = nullptr;
+		for (; curr ; curr = next)
+		{
+			indexes->del(curr);
+
+			next = curr->link;
+
+			if (curr->prev)
+				curr->prev->next = curr->next;
+			else
+				db->head = curr->next;
+
+			if (curr->next)
+				curr->next->prev = curr->prev;
+
+			delete curr;
+		}
+	}
+
 private:
-	void erase () { db = nullptr; indexes = nullptr; }
+	void erase () { db->erase(); indexes->erase(); }
 };
 
 #endif // DATABASE_H
