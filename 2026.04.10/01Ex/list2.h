@@ -13,8 +13,6 @@
 template <typename T>
 class database;
 
-class command;
-
 template <typename T>
 class list2
 {
@@ -282,8 +280,7 @@ public:
 		return origin;
 	}
 
-	template <typename T>
-	friend class database;
+	friend class database<T>;
 	friend class command;
 private:
 	void erase ()

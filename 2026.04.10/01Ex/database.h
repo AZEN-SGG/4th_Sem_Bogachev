@@ -2,7 +2,10 @@
 #define DATABASE_H
 
 #include "io_status.h"
+#include "operation.h"
 #include "ordering.h"
+#include "comparator.h"
+#include "search_conditions.h"
 
 #include "list2.h"
 #include "list2_node.h"
@@ -10,6 +13,8 @@
 
 #include <memory>
 #include <new>
+
+class command;
 
 template <typename T>
 class database
@@ -73,7 +78,10 @@ public:
 		return io_status::success;
 	}
 
-	void del (list2_node<T> *curr)
+	// Возвращает количество выведенных элементов
+	int print_selected (list2_node<T> *curr, FILE *fp = stdout, const ordering *order = nullptr) { return db->print_sublist(curr, fp, order); }
+
+	void delete_selected (list2_node<T> *curr)
 	{
 		list2_node<T> *next = nullptr;
 		for (; curr ; curr = next)
@@ -94,8 +102,26 @@ public:
 		}
 	}
 
+	list2_node<T> * validate (search_conditions<T>& cond)
+	{
+		if (
+				(cond.op == operation::lor) && 
+				(!((cond.c_group == condition::eq || cond.c_group == condition::none) &&
+					(cond.c_phone == condition::eq || cond.c_phone == condition::none) &&
+					(cond.c_name == condition::eq || cond.c_name == condition::none))
+		)) {
+			
+		}
+		indexes->validate(cond); }
+	
+	list2_node<T> * sort_selected (list2_node<T> *origin, comparator<T>& comp) { return db->sort(origin); }
+
+	friend class command;
+
 private:
 	void erase () { db->erase(); indexes->erase(); }
+
+	list2_node<T> * search_node (const T& x) { return indexes->search_node(x); }
 };
 
 #endif // DATABASE_H

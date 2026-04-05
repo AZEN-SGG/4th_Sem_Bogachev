@@ -1,10 +1,6 @@
 #include "command.h"
-#include "condition.h"
-#include "list2.h"
-#include "list2_node.h"
-#include "operation.h"
-#include "rb_tree.h"
 #include "record.h"
+#include "search_conditions.h"
 
 
 int command::apply (database<record> *db)
@@ -14,13 +10,13 @@ int command::apply (database<record> *db)
 	switch (type)
 	{
 		case command_type::insert:
-			apply_insert(worm, db);
+			apply_insert(db);
 			break;
 		case command_type::select:
-			res = apply_select(worm, db);
+			res = apply_select(db);
 			break;
 		case command_type::del:
-			apply_delete(worm, db);
+			apply_delete(db);
 			break;
 		case command_type::quit:
 			break;
@@ -42,7 +38,7 @@ void command::apply_insert (database<record> *db)
 int command::apply_select (database<record> *db)
 {
 	// Получили head подсписка
-	auto curr = validate(worm, db);
+	auto curr = validate(db);
 
 	if (order_by[0] != ordering::none)
 	{
@@ -60,8 +56,8 @@ int command::apply_select (database<record> *db)
 
 void command::apply_delete (database<record> *db)
 {
-	auto curr = validate(db);
-	db->del(curr);
+	auto curr = db->validate(static_cast<search_conditions<record>&>(*this));
+	db->delete_selected(curr);
 }
 
 list2_node<record> * command::validate (database<record> *db)
@@ -73,9 +69,9 @@ list2_node<record> * command::validate (database<record> *db)
 	if (c_name == condition::eq
 		&& c_phone == condition::eq
 		&& c_group == condition::none
-		&& op == operation::lor 
+		&& op == operation::lor
 	) {
-		auto suit_phone = db->search_node<record>(*this);
+		auto suit_phone = db->search_node<order, ordering::phone>(*this);
 		// Нашли узел с таким телефоном
 		if (suit_phone)
 			curr = suit_phone->select_all(&last);

@@ -1,15 +1,20 @@
 #ifndef FAST_SEARCH_H
 #define FAST_SEARCH_H
 
+#include "condition.h"
 #include "io_status.h"
 #include "list2_node.h"
 #include "ordering.h"
+#include "search_conditions.h"
 
 #include "rb_tree.h"
 #include "data_tree.h"
 #include "validator.h"
 
 #include <memory>
+
+template <typename T>
+class database;
 
 template <typename T>
 class search_structure_store;
@@ -119,7 +124,7 @@ public:
 	search_structure_store (const search_structure_store& x) = delete;
 	search_structure_store & operator= (const search_structure_store& x) = delete;
 
-	friend class database;
+	friend class database<T>;
 
 private:
 	void erase () { trees->erase(); hash->erase(); }
@@ -136,6 +141,19 @@ private:
 	{
 		trees->del(curr);
 		hash->del(curr);
+	}
+
+	list2_node<T> * validate (search_conditions<T>& x)
+	{
+			}
+			if (x.c_group )
+
+		}
+
+		if (x.c_group == condition::eq)
+		{
+			hash->validate ()
+		}
 	}
 };
 
