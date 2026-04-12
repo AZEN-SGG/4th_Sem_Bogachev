@@ -110,6 +110,17 @@ public:
 private:
 	void erase () { delete_subtree(root); root = nullptr; }
 
+	static rb_tree_node<T> * select_all (rb_tree_node<T> *origin)
+	{
+		for (auto curr = origin ; curr ; curr = curr->right)
+		{
+			curr->select_all();
+			select_all(curr->left);
+		}
+
+		return origin;
+	}
+
 	// На вход подаётся list2_node
 	template <typename X>
 	rb_tree_node<T> * add (X *x)

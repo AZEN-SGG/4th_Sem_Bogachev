@@ -3,8 +3,16 @@
 
 #include "operation.h"
 #include "condition.h"
+#include "validator.h"
+#include "ordering.h"
 
-template <typename T>
+template <typename U>
+class index_trees;
+
+template <typename U, ordering X>
+class index_array;
+
+template <typename U>
 class search_structure_store;
 
 template <typename T>
@@ -25,8 +33,19 @@ public:
 
 	search_conditions (const search_conditions&) = delete;
 	search_conditions& operator= (const search_conditions&) = delete;
+	
+	template <typename X>
+	void make_validator (validator<search_conditions<T>, X>& val) const;
 
-	friend class search_structure_store<T>;
+
+	template <typename U>
+	friend class index_trees;
+
+	template <typename U, ordering X>
+	friend class index_array;
+
+	template <typename U>
+	friend class search_structure_store;
 };
 
 #endif // SEARCH_CONDITIONS

@@ -1,6 +1,8 @@
 #include "command.h"
+#include "pattern.h"
 #include "record.h"
 #include "search_conditions.h"
+#include "validator.h"
 
 
 int command::apply (database<record> *db)
@@ -56,7 +58,7 @@ int command::apply_select (database<record> *db)
 
 void command::apply_delete (database<record> *db)
 {
-	auto curr = db->validate(static_cast<search_conditions<record>&>(*this));
+	auto curr = db->validate(static_cast<search_conditions<name_query>&>(*this));
 	db->delete_selected(curr);
 }
 
@@ -127,18 +129,20 @@ list2_node<record> * command::validate (database<record> *db)
 	return curr;
 }
 
-void command::make_validator (validator<command, record>& val) const
+template <>
+template <>
+void search_conditions<name_query>::make_validator (validator<search_conditions<name_query>, record>& val) const
 {
 	val.op = op;
 
-	validator<command, record>::valid_t neutral = nullptr;
+	validator<search_conditions<name_query>, record>::valid_t neutral = nullptr;
 	switch (op)
 	{
 		case operation::land:
-			neutral = &command::is_true;
+			neutral = &record::is_true;
 			break;
 		case operation::lor:
-			neutral = &command::is_false;
+			neutral = &record::is_false;
 			break;
 		case operation::none:
 			neutral = nullptr;
@@ -146,33 +150,24 @@ void command::make_validator (validator<command, record>& val) const
 	}
 
 	if (c_group != condition::none)
-		val.fgroup = &command::cmp_group;
+		val.fgroup = &record::cmp_group;
 	else
 		val.fgroup = neutral;
 
 	if (c_phone != condition::none)
-		val.fphone = &command::cmp_phone;
+		val.fphone = &record::cmp_phone;
 	else
 		val.fphone = neutral;
 
 	if (c_name != condition::none)
 	{
 		if (c_name == condition::like)
-			val.fname = &command::like_name;
+			val.fname = &pattern::like_name;
 		else if (c_name == condition::nlike)
-			val.fname = &command::nlike_name;
+			val.fname = &pattern::nlike_name;
 		else
 			val.fname = &command::cmp_name;
 	} else
 		val.fname = neutral;
 }
-
-bool command::is_true (record&) const { return true; }
-bool command::is_false (record&) const { return false; }
-
-bool command::cmp_group (record& x) const { return x.compare_group(c_group, *this); }
-bool command::cmp_phone (record& x) const { return x.compare_phone(c_phone, *this); }
-bool command::cmp_name (record& x) const { return x.compare_word(c_name, *this); }
-bool command::like_name (record& x) const { return pattern::is_valid(x.get_word(), 0, 0); }
-bool command::nlike_name (record& x) const { return !pattern::is_valid(x.get_word(), 0, 0); }
 

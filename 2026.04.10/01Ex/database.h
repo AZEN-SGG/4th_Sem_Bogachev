@@ -10,6 +10,7 @@
 #include "list2.h"
 #include "list2_node.h"
 #include "fast_search.h"
+#include "validator.h"
 
 #include <memory>
 #include <new>
@@ -102,7 +103,8 @@ public:
 		}
 	}
 
-	list2_node<T> * validate (search_conditions<T>& cond)
+	template <typename X>
+	list2_node<T> * validate (search_conditions<X>& cond, list2_node<T> **last_selected = nullptr)
 	{
 		if (
 				(cond.op == operation::lor) && 
@@ -110,9 +112,17 @@ public:
 					(cond.c_phone == condition::eq || cond.c_phone == condition::none) &&
 					(cond.c_name == condition::eq || cond.c_name == condition::none))
 		)) {
-			
+			validator<search_conditions<X>, T> val;
+			list2_node<T> *origin = nullptr;
+
+			cond.make_validator(val);
+			origin = db->select_valid(*this, val);
+
+			return origin;
 		}
-		indexes->validate(cond); }
+
+		return indexes->validate(cond);
+	}
 	
 	list2_node<T> * sort_selected (list2_node<T> *origin, comparator<T>& comp) { return db->sort(origin); }
 

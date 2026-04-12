@@ -27,7 +27,7 @@ enum class fields_t
 	group,
 };
 
-class command : public pattern, public search_conditions<record>
+class command : public search_conditions<name_query>
 {
 private:
 	static const int len_command = 3;
@@ -41,22 +41,16 @@ public:
 
 	command& operator= (command&& x)
 	{
-		if (this == &x)
-			return (*this);
+		static_cast<name_query&>(*this) = static_cast<name_query&&>(x);
 
-		word = std::move(x.word);
-		span = std::move(x.span);
-		spec = std::move(x.spec);
-		group = x.group;
-		phone = x.phone;
-		
-		c_name = x.c_name;
-		c_phone = x.c_phone;
-		c_group = x.c_group;
-		op = x.op;
+		type = x.type;
+		for (int i = 0 ; i < max_items ; ++i)
+		{
+			order[i] = x.order[i];
+			order_by[i] = x.order_by[i];
+		}
 
 		x.erase();
-
 		return (*this);
 	}
 	command& operator= (const command& x) = delete;
@@ -91,17 +85,6 @@ public:
 	void apply_insert (database<record> *db);
 	int apply_select (database<record> *db);
 	void apply_delete (database<record> *db);
-
-	list2_node<record> * validate (database<record> *db);
-	void make_validator (validator<command, record>& val) const;
-	bool is_true (record&) const;
-	bool is_false (record&) const;
-
-	bool cmp_group (record& x) const;
-	bool cmp_phone (record& x) const;
-	bool cmp_name(record& x) const;
-	bool like_name (record& x) const;
-	bool nlike_name (record& x) const;
 
 	bool is_valid (const record& x) const;
 

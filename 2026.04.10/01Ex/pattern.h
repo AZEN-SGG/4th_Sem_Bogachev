@@ -2,28 +2,13 @@
 #define PATTERN_H
 
 #include "io_status.h"
+#include "validator.h"
+#include "record.h"
 
 #include <memory>
 #include <cstdio>
 
 #define LEN 1234
-
-class name_t
-{
-	protected:
-		std::unique_ptr<char[]> word = nullptr;
-
-		void erase () { word.reset(); }
-	public:
-		name_t () = default;
-		~name_t () = default;
-
-		name_t(const name_t&) = delete;
-		name_t& operator=(const name_t&) = delete;
-
-		name_t(name_t&&) noexcept = default;
-		name_t& operator=(name_t&&) noexcept = default;
-};
 
 enum class type_pattern
 {
@@ -63,6 +48,9 @@ class pattern : virtual public name_t
 			return (*this);
 		}
 		pattern& operator= (const pattern& x) = delete;
+
+		bool like_name (record& x) const { return is_valid(x.get_word(), 0, 0); }
+		bool nlike_name (record& x) const { return !is_valid(x.get_word(), 0, 0); }
 
 		char * get_word () const { return word.get(); }
 		type_pattern * get_spec () const { return spec.get(); }
@@ -213,6 +201,31 @@ class pattern : virtual public name_t
 			span.reset();
 			spec.reset();
 		}
+};
+
+
+class name_query : public record, public pattern
+{
+public:
+	name_query () = default;
+	~name_query () = default;
+
+	name_query & operator= (name_query&& x)
+	{
+		if (this == &x)
+			return (*this);
+
+		word = std::move(x.word);
+		span = std::move(x.span);
+		spec = std::move(x.spec);
+		group = x.group;
+		phone = x.phone;
+
+		return *this;
+	}
+
+	name_query (const name_query&) = delete;
+	name_query & operator= (const name_query&) = delete;
 };
 
 #endif // PATTERN_H

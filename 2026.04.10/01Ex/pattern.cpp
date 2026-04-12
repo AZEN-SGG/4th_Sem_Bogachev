@@ -103,3 +103,4 @@ int pattern::is_valid (const char *str, int i_word, int i_bord) const
 
 	return 1;
 }
+
