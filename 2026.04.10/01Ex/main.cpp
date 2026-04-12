@@ -1,12 +1,18 @@
 #include <cstdio>
 #include <ctime>
 
+#include "fast_search.h"
 #include "io_status.h"
+#include "ordering.h"
+#include "record.h"
 #include "separator.h"
 #include "solve.h"
 
 template<>
 unsigned int list2<record>::r = -1;
+
+template<>
+const int index_array<record, ordering::group>::max_size = 1000;
 
 bool separator::ch_[separator::char_len] = {};
 

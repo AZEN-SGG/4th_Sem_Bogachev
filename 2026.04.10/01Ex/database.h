@@ -34,7 +34,7 @@ public:
 
 	io_status add (T&& x)
 	{
-		auto new_node = db->add_node(x);
+		auto new_node = db->add_node(std::move(x));
 
 		if (!new_node)
 			return io_status::memory;
@@ -126,8 +126,11 @@ public:
 			origin = indexes->validate(cond, &last);
 
 		if (last_selected)
+		{
+			if (last)
+				last->link = last;
 			*last_selected = last;
-		else if (last)
+		} else if (last)
 			last->link = nullptr;
 
 		return origin;

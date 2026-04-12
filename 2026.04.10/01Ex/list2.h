@@ -174,6 +174,8 @@ public:
 
 		if (last)
 			*last = prev;
+		else if (prev)
+			prev->link = nullptr;
 
 		return origin;
 	}

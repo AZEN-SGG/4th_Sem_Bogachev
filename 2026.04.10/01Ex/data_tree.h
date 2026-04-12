@@ -133,19 +133,24 @@ public:
 					}
 				}
 
-			if (prev)
-				prev->link = prev;
-
 			if (last)
+			{
+				if (prev)
+					prev->link = prev;
 				*last = prev;
+			} else if (prev)
+				prev->link = nullptr;
 
 			return origin;
 		} else
-			if (val(x, *node))
+			if (val(x, *node) && (!node->link))
 			{
-				node->link = node;
 				if (last)
+				{
+					node->link = node;
 					*last = node;
+				} else
+					node->link = nullptr;
 
 				return node;
 			}
@@ -174,20 +179,27 @@ public:
 						origin = prev = curr->node;
 				}
 
-			if (prev)
-				prev->link = prev;
-
 			if (last)
+			{
+				if (prev)
+					prev->link = prev;
 				*last = prev;
+			} else if (prev)
+				prev->link = nullptr;
 
 			return origin;
 		} else
 		{
-			node->link = node;
-			if (last)
-				*last = node;
-
-			return node;
+			if (!node->link)
+			{
+				if (last)
+				{
+					node->link = node;
+					*last = node;
+				}
+				
+				return node;
+			}
 		}
 
 		// Ничего не нашли

@@ -113,7 +113,8 @@ private:
 					else
 						origin = temp;
 
-					last = temp_l;
+					if (temp_l)
+						last = temp_l;
 				}
 			}
 		// Если и
@@ -154,8 +155,11 @@ private:
 		}
 
 		if (last_selected)
+		{
+			if (last)
+				last->link = last;
 			*last_selected = last;
-		else if (last)
+		} else if (last)
 			last->link = nullptr;
 
 		return origin;
@@ -195,8 +199,11 @@ private:
 		}
 
 		if (last_selected)
+		{
+			if (last)
+				last->link = last;
 			*last_selected = last;
-		else if (last)
+		} else if (last)
 			last->link = nullptr;
 
 		return origin;
@@ -326,8 +333,11 @@ private:
 		}
 
 		if (last_selected)
+		{
+			if (last)
+				last->link = last;
 			*last_selected = last;
-		else if (last)
+		} else if (last)
 			last->link = nullptr;
 
 		return origin;
