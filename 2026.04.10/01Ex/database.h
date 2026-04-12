@@ -67,7 +67,10 @@ public:
 
 			auto ret = indexes->add(curr);
 			if (ret != io_status::success)
+			{
+				db->del(curr);
 				return ret;
+			}
 
 			i++;
 		} if ((!feof(fp)) && (i < max_read))

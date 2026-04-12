@@ -221,14 +221,10 @@ public:
 	friend class search_structure_store<T>;
 
 private:
-	void erase () { for (int i = 0 ; i < max_size ; ++i) hash[i]->erase(); }
+	void erase () { for (int i = 0 ; i < max_size ; ++i) hash[i].erase(); }
 	list2_node<T> * search_node (const T& x) { return hash[x->template get_hash<X>()].search_node(x); }
 
-	io_status add (list2_node<T> *x)
-	{
-		hash[x->template get_hash<X>()].add(x);
-		return io_status::success;
-	}
+	io_status add (list2_node<T> *x) { return hash[x->template get_hash<X>()].add(x); }
 
 	void del (list2_node<T> *x) { hash[static_cast<T*>(x->template get_hash<X>())].del(x); }
 
@@ -276,8 +272,18 @@ private:
 	// Приватная, так как эти классы обязательно содержатся в базе, они не существуют отдельно!
 	io_status add (list2_node<T> *x)
 	{
-		trees->add(x);
-		hash->add(x);
+		auto ret = trees->add(x);
+		if (ret != io_status::success)
+			return ret;
+
+		ret = hash->add(x);
+		if (ret != io_status::success)
+		{
+			trees->del(x);
+			return ret;
+		}
+		
+		return io_status::success;
 	}
 
 	void del (list2_node<T> *curr)

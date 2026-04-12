@@ -3,6 +3,7 @@
 
 #include "database.h"
 
+#include "io_status.h"
 #include "record.h"
 #include "command.h"
 
@@ -59,8 +60,10 @@ public:
 				} else
 				{
 //					x.print();
-					(*res) += x.apply(db.get());
+					ret = x.apply(db.get(), res);
 //					db->print(100);
+					if (ret != io_status::success)
+						return ret;
 				}
 
 				fprintf(f_out, "\n");

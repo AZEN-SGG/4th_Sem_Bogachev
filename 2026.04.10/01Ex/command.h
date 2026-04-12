@@ -81,8 +81,8 @@ public:
 	static void print_condition (FILE *fp, const condition cond);
 	static void print_operation (FILE *fp, const operation op);
 	
-	int apply (database<record> *db);
-	void apply_insert (database<record> *db);
+	io_status apply (database<record> *db, int *res);
+	io_status apply_insert (database<record> *db);
 	int apply_select (database<record> *db);
 	void apply_delete (database<record> *db);
 

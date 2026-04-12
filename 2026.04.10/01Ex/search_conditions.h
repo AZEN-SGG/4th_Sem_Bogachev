@@ -37,6 +37,14 @@ public:
 	template <typename X>
 	void make_validator (validator<search_conditions<T>, X>& val) const;
 
+	template <typename X>
+	bool cmp_group (X& x) const { return x.compare_group(c_group, *this); }
+
+	template <typename X>
+	bool cmp_phone (X& x) const { return x.compare_phone(c_phone, *this); }
+
+	template <typename X>
+	bool cmp_name (X& x) const { return x.compare_word(c_name, *this); }
 
 	template <typename U>
 	friend class index_trees;
@@ -46,6 +54,9 @@ public:
 
 	template <typename U>
 	friend class search_structure_store;
+
+	template <typename U>
+	friend class database;
 };
 
 #endif // SEARCH_CONDITIONS

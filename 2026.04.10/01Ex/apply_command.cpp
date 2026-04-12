@@ -1,21 +1,22 @@
 #include "command.h"
+#include "io_status.h"
 #include "pattern.h"
 #include "record.h"
 #include "search_conditions.h"
 #include "validator.h"
 
 
-int command::apply (database<record> *db)
+io_status command::apply (database<record> *db, int *res)
 {
-	int res = 0;
+	io_status ret = io_status::success;
 
 	switch (type)
 	{
 		case command_type::insert:
-			apply_insert(db);
+			ret = apply_insert(db);
 			break;
 		case command_type::select:
-			res = apply_select(db);
+			(*res) += apply_select(db);
 			break;
 		case command_type::del:
 			apply_delete(db);
@@ -26,15 +27,19 @@ int command::apply (database<record> *db)
 			break;
 	}
 
-	return res;
+	return ret;
 }
 
 // Бинарный поиск одинакового элемента при добавлении
-void command::apply_insert (database<record> *db)
+io_status command::apply_insert (database<record> *db)
 {
+	io_status ret = io_status::success;
+
 	auto node = db->search_node(static_cast<const record&>(*this));
 	if (!node)
-		db->add(static_cast<record &&>(*this));
+		ret = db->add(static_cast<record &&>(*this));
+
+	return ret;
 }
 
 int command::apply_select (database<record> *db)
@@ -82,12 +87,12 @@ void search_conditions<name_query>::make_validator (validator<search_conditions<
 	}
 
 	if (c_group != condition::none)
-		val.fgroup = &record::cmp_group;
+		val.fgroup = &search_conditions<name_query>::cmp_group;
 	else
 		val.fgroup = neutral;
 
 	if (c_phone != condition::none)
-		val.fphone = &record::cmp_phone;
+		val.fphone = &search_conditions<name_query>::cmp_phone;
 	else
 		val.fphone = neutral;
 

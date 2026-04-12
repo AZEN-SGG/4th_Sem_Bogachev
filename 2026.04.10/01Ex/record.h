@@ -129,10 +129,6 @@ public:
 	bool is_true (record&) const { return true; }
 	bool is_false (record&) const { return false; }
 
-	bool cmp_group (record& x) const { return x.compare_group(c_group, *this); }
-	bool cmp_phone (record& x) const { return x.compare_phone(c_phone, *this); }
-	bool cmp_name (record& x) const { return x.compare_word(c_name, *this); }
-
 	void print (FILE *fp = stdout, const ordering *order = nullptr) const
 	{
 		const ordering default_ordering[ORDERING_LEN] = {ordering::name, ordering::phone, ordering::group};

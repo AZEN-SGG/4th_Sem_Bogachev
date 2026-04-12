@@ -66,7 +66,7 @@ class list2_node : public T
 		void set_link (list2_node *r) { link = r; }
 
 		friend class list2<T>;
-		friend class command;
+		friend class database;
 
 		template <typename U, ordering X>
 		friend class data_tree;

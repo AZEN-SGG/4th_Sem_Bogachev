@@ -301,6 +301,27 @@ private:
 			curr->link = nullptr;
 	}
 
+	void del (list2_node<T> *x)
+	{
+		for (auto curr = head ; curr ; curr = curr->next)
+		{
+			if (curr == x)
+			{
+				if (x == head)
+					head = x->next;
+				else
+					x->prev->next = x->next;
+
+				if (x->next)
+					x->next->prev = x->prev;
+
+				delete x;
+				x = nullptr;
+				break;
+			}
+		}
+	}
+
 	void add (list2_node<T> *curr)
 	{
 		if (head)
