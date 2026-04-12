@@ -87,22 +87,36 @@ private:
 		if (x.op == operation::lor)
 		{
 			if (x.c_name == condition::eq)
-				origin = select_all(name_index, &last);
+			{
+				auto node = name_index->search_node();
+				if (node)
+					origin = node->select_all(&last);
+				else
+				{
+					origin = nullptr;
+					last = nullptr;
+				}
+			}
 
 			if (x.c_phone == condition::eq)
 			{
 				list2_node<T> *temp = nullptr,
 								*temp_l = nullptr;
 
-				temp = select_all(phone_index, &temp_l);
-				
-				if (last)
-					last->link = temp;
-				else
-					origin = temp;
+				auto node = phone_index->search_node();
+				if (node)
+				{
+					temp = node->select_all(&temp_l);
 
-				last = temp_l;
+					if (last)
+						last->link = temp;
+					else
+						origin = temp;
+
+					last = temp_l;
+				}
 			}
+		// Если и
 		} else
 		{
 			validator<X, T> val;
@@ -147,31 +161,45 @@ private:
 		return origin;
 	}
 
-	list2_node<T> select_all ()
-	{
-		rb_tree_node<data_tree<T, ordering::phone>> *curr = phone_index->root,
-													*last = nullptr;
-		for (; curr ; curr = curr->)
-	}
+	list2_node<T> * select_all (list2_node<T> **last = nullptr) { return select_all_in_subtree(name_index->root, last); }
 
+	template <ordering X>
 	static list2_node<T> select_all_in_subtree (
-			rb_tree_node<data_tree<T, ordering::phone>> *curr,
-			list2_node<T> **last
+			rb_tree_node<data_tree<T, X>> *curr,
+			list2_node<T> **last_selected = nullptr
 	) {
-		list2_node<T> *temp = nullptr;
+		list2_node<T> *origin = nullptr,
+						*last = nullptr;
+
 		if (curr)
 		{
-			curr->select_all(&temp);
-			(*last) = temp;
+			list2_node<T> *temp_l = nullptr;
 
-			select_all_in_subtree(curr->left);
+			origin = curr->select_all(&last);
+			last->link = select_all_in_subtree(curr->left, &temp_l);
+			if (temp_l)
+				last = temp_l;
+
+			curr = curr->right;
 		}
 
 		for (; curr ; curr = curr->right)
 		{
-			last->link = curr->select_all(&temp);
-			last = temp;
+			list2_node<T> *temp_l = nullptr;
+
+			// Если не nullptr, значит там как минимум один элемент есть, значит есть и последний
+			last->link = curr->select_all(&temp_l);
+			temp_l->link = select_all_in_subtree(curr->left, &last);
+			if (!last)
+				last = temp_l;
 		}
+
+		if (last_selected)
+			*last_selected = last;
+		else if (last)
+			last->link = nullptr;
+
+		return origin;
 	}
 };
 
@@ -205,14 +233,18 @@ private:
 	void del (list2_node<T> *x) { hash[static_cast<T*>(x->template get_hash<X>())].del(x); }
 
 	template <typename U>
-	list2_node<T> * validate (search_conditions<U>& x, list2_node<T> **last)
+	list2_node<T> * validate (search_conditions<U>& x, list2_node<T> **last = nullptr)
 	{
 		list2_node<T> *origin = nullptr;
 
 		if (x.op == operation::lor)
 			origin = hash[x->template get_hash<X>()]->select_all(last);
 		else
+		{
+			x.c_group = condition::none;
 			origin = hash[x->template get_hash<X>()]->validate(x, last);
+			x.c_group = condition::eq;
+		}
 
 		return origin;
 	}
@@ -287,7 +319,11 @@ private:
 				origin = trees->validate(x, &last);
 		}
 
-		*last_selected = last;
+		if (last_selected)
+			*last_selected = last;
+		else if (last)
+			last->link = nullptr;
+
 		return origin;
 	}
 };

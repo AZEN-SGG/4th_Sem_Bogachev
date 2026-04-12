@@ -39,8 +39,7 @@ void command::apply_insert (database<record> *db)
 
 int command::apply_select (database<record> *db)
 {
-	// Получили head подсписка
-	auto curr = validate(db);
+	auto curr = db->validate(static_cast<search_conditions<name_query>&>(*this));
 
 	if (order_by[0] != ordering::none)
 	{
@@ -60,73 +59,6 @@ void command::apply_delete (database<record> *db)
 {
 	auto curr = db->validate(static_cast<search_conditions<name_query>&>(*this));
 	db->delete_selected(curr);
-}
-
-list2_node<record> * command::validate (database<record> *db)
-{
-	list2_node<record> 	*curr = nullptr,
-						*last = nullptr;
-
-	validator<command, record> val;
-	if (c_name == condition::eq
-		&& c_phone == condition::eq
-		&& c_group == condition::none
-		&& op == operation::lor
-	) {
-		auto suit_phone = db->search_node<order, ordering::phone>(*this);
-		// Нашли узел с таким телефоном
-		if (suit_phone)
-			curr = suit_phone->select_all(&last);
-
-		auto suit_name = db->search_node<record>(*this);
-		// Нашли узел с таким именем, берём все элементы
-		if (suit_name)
-		{
-			list2_node<record> *temp = nullptr,
-				*curr_by_name = suit_name->select_all(&temp);
-
-			if (last)
-				last->link = curr_by_name;
-			else
-				curr = curr_by_name;
-
-			last = temp;
-		}
-	} else if (c_phone == condition::eq && op == operation::land)
-	{
-		c_phone = condition::none;
-		make_validator(val);
-		c_phone = condition::eq;
-
-		auto suit_node = db->search_node<record>(*this);
-		// Не нашли узла с таким номером
-		if (!suit_node)
-			return nullptr;
-
-		curr = suit_node->select_valid<command>(*this, val, &last);
-	} else if (c_name == condition::eq && op == operation::land)
-	{
-		c_name = condition::none;
-		make_validator(val);
-		c_name = condition::eq;
-
-		auto suit_node = db->search_node<record>(*this);
-		// Не нашли узла с таким именем
-		if (!suit_node)
-			return nullptr;
-
-		curr = suit_node->select_valid<command> (*this, val, &last);
-	} else
-	{
-		make_validator(val);
-		curr = worm->select_valid(*this, val, &last);
-	}
-
-	// Чтобы последний считался за найденный он указывает сам на себя!
-	if (last)
-		last->link = nullptr;
-
-	return curr;
 }
 
 template <>

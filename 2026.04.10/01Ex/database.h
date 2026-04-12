@@ -106,6 +106,9 @@ public:
 	template <typename X>
 	list2_node<T> * validate (search_conditions<X>& cond, list2_node<T> **last_selected = nullptr)
 	{
+		list2_node<T> *origin = nullptr,
+						*last = nullptr;
+		
 		if (
 				(cond.op == operation::lor) && 
 				(!((cond.c_group == condition::eq || cond.c_group == condition::none) &&
@@ -113,15 +116,18 @@ public:
 					(cond.c_name == condition::eq || cond.c_name == condition::none))
 		)) {
 			validator<search_conditions<X>, T> val;
-			list2_node<T> *origin = nullptr;
 
 			cond.make_validator(val);
-			origin = db->select_valid(*this, val);
+			origin = db->select_valid(*this, val, &last);
+		} else
+			origin = indexes->validate(cond, &last);
 
-			return origin;
-		}
+		if (last_selected)
+			*last_selected = last;
+		else if (last)
+			last->link = nullptr;
 
-		return indexes->validate(cond);
+		return origin;
 	}
 	
 	list2_node<T> * sort_selected (list2_node<T> *origin, comparator<T>& comp) { return db->sort(origin); }

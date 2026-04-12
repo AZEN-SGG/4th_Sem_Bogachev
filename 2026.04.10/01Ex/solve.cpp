@@ -1,10 +1,10 @@
 #include "solve.h"
-#include "database.h"
+#include "database_manager.h"
 
 
 io_status solve (char *filename, int *r)
 {
-	auto db = new (std::nothrow) database();
+	auto db = new (std::nothrow) database_manager();
     if (db == nullptr)
 		return io_status::memory;
 
