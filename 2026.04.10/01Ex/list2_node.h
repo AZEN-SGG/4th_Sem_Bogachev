@@ -6,12 +6,19 @@
 #include <utility>
 
 template <typename T>
-class list2;
+class database;
 
-class command;
+template <typename T>
+class search_structure_store;
+
+template <typename T>
+class index_trees;
 
 template <typename T, ordering X>
 class data_tree;
+
+template <typename T>
+class list2;
 
 template <typename T>
 class list2_node : public T
@@ -66,7 +73,10 @@ class list2_node : public T
 		void set_link (list2_node *r) { link = r; }
 
 		friend class list2<T>;
-		friend class database;
+
+		friend class database<T>;
+		friend class search_structure_store<T>;
+		friend class index_trees<T>;
 
 		template <typename U, ordering X>
 		friend class data_tree;

@@ -1,7 +1,7 @@
 #include "record.h"
 
 template <>
-std::size_t record::get_hash <ordering::group> () { return static_cast<std::size_t>(group); }
+std::size_t record::get_hash <ordering::group> () const { return static_cast<std::size_t>(group); }
 
 template <>
 int record::cmp <ordering::name> (const record& x) { return cmp_word(*this, x); }

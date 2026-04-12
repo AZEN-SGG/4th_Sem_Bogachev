@@ -43,7 +43,7 @@ public:
 	int get_group () const { return group; }
 
 	template <ordering X>
-	std::size_t get_hash ();
+	std::size_t get_hash () const;
 
 	int init (const char *n, int p, int g)
 	{

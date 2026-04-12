@@ -37,7 +37,7 @@ io_status command::apply_insert (database<record> *db)
 
 	auto node = db->search_node(static_cast<const record&>(*this));
 	if (!node)
-		ret = db->add(static_cast<record &&>(*this));
+		ret = db->add(static_cast<record&&>(*this));
 
 	return ret;
 }

@@ -39,7 +39,7 @@ public:
 		if (!new_node)
 			return io_status::memory;
 
-		auto ret = indexes->add(new_node);
+		io_status ret = indexes->add(new_node);
 		if (ret != io_status::success)
 			return ret;
 
@@ -121,7 +121,7 @@ public:
 			validator<search_conditions<X>, T> val;
 
 			cond.make_validator(val);
-			origin = db->select_valid(*this, val, &last);
+			origin = db->select_valid(cond, val, &last);
 		} else
 			origin = indexes->validate(cond, &last);
 
@@ -133,7 +133,7 @@ public:
 		return origin;
 	}
 	
-	list2_node<T> * sort_selected (list2_node<T> *origin, comparator<T>& comp) { return db->sort(origin); }
+	list2_node<T> * sort_selected (list2_node<T> *origin, comparator<T>& comp) { return db->sort(origin, comp); }
 
 	friend class command;
 

@@ -8,6 +8,7 @@
 #include "list_node.h"
 #include "rb_tree.h"
 #include "validator.h"
+#include "search_conditions.h"
 
 #include <memory>
 #include <utility>
@@ -108,7 +109,7 @@ public:
 	}
 
 	template <typename U>
-	list2_node<T> * select_valid (const U& x, validator<U, T>& val, list2_node<T> **last = nullptr) const
+	list2_node<T> * select_valid (const search_conditions<U>& x, validator<search_conditions<U>, T>& val, list2_node<T> **last = nullptr) const
 	{
 		// Выбор идёт последовательно - это важно!
 		if (uniform)

@@ -88,7 +88,7 @@ private:
 		{
 			if (x.c_name == condition::eq)
 			{
-				auto node = name_index->search_node();
+				auto node = name_index->search_node(x);
 				if (node)
 					origin = node->select_all(&last);
 				else
@@ -103,7 +103,7 @@ private:
 				list2_node<T> *temp = nullptr,
 								*temp_l = nullptr;
 
-				auto node = phone_index->search_node();
+				auto node = phone_index->search_node(x);
 				if (node)
 				{
 					temp = node->select_all(&temp_l);
@@ -119,12 +119,12 @@ private:
 		// Если и
 		} else
 		{
-			validator<X, T> val;
+			validator<search_conditions<X>, T> val;
 
 			if (x.c_name == condition::eq)
 			{
 				x.c_name = condition::none;
-				make_validator(val);
+				x.make_validator(val);
 				x.c_name = condition::eq;
 
 				auto suit_node = name_index->template search_node<T>(x);
@@ -138,7 +138,7 @@ private:
 			} else if (x.c_phone == condition::eq)
 			{
 				x.c_phone = condition::none;
-				make_validator(val);
+				x.make_validator(val);
 				x.c_phone = condition::eq;
 
 				auto suit_node = phone_index->template search_node<T>(x);
@@ -164,7 +164,7 @@ private:
 	list2_node<T> * select_all (list2_node<T> **last = nullptr) { return select_all_in_subtree(name_index->root, last); }
 
 	template <ordering X>
-	static list2_node<T> select_all_in_subtree (
+	static list2_node<T> * select_all_in_subtree (
 			rb_tree_node<data_tree<T, X>> *curr,
 			list2_node<T> **last_selected = nullptr
 	) {
@@ -222,11 +222,11 @@ public:
 
 private:
 	void erase () { for (int i = 0 ; i < max_size ; ++i) hash[i].erase(); }
-	list2_node<T> * search_node (const T& x) { return hash[x->template get_hash<X>()].search_node(x); }
+	list2_node<T> * search_node (const T& x) { return hash[x.template get_hash<X>()].search_node(x); }
 
 	io_status add (list2_node<T> *x) { return hash[x->template get_hash<X>()].add(x); }
 
-	void del (list2_node<T> *x) { hash[static_cast<T*>(x->template get_hash<X>())].del(x); }
+	void del (list2_node<T> *x) { hash[x->template get_hash<X>()].del(x); }
 
 	template <typename U>
 	list2_node<T> * validate (search_conditions<U>& x, list2_node<T> **last = nullptr)
@@ -234,11 +234,11 @@ private:
 		list2_node<T> *origin = nullptr;
 
 		if (x.op == operation::lor)
-			origin = hash[x->template get_hash<X>()]->select_all(last);
+			origin = hash[x.template get_hash<X>()].select_all(last);
 		else
 		{
 			x.c_group = condition::none;
-			origin = hash[x->template get_hash<X>()]->validate(x, last);
+			origin = hash[x.template get_hash<X>()].validate(x, last);
 			x.c_group = condition::eq;
 		}
 

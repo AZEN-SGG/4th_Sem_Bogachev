@@ -4,6 +4,9 @@
 #include <cstdio>
 
 template <typename T>
+class index_trees;
+
+template <typename T>
 class rb_tree;
 
 template <typename T>
@@ -63,6 +66,9 @@ class rb_tree_node : public T
 			};
 			static_cast<const T*>(this)->print(fp);
 		}
+
+		template <typename X>
+		friend class index_trees;
 
 		friend class rb_tree<T>;
 	private:

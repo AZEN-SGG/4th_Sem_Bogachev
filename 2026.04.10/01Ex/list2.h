@@ -3,15 +3,14 @@
 
 #include "io_status.h"
 #include "list2_node.h"
+
 #include "comparator.h"
 #include "ordering.h"
 #include "validator.h"
+#include "search_conditions.h"
 
 #include <cstdio>
 #include <new>
-
-template <typename T>
-class database;
 
 template <typename T>
 class list2
@@ -156,7 +155,7 @@ public:
 	}
 
 	template <typename X>
-	list2_node<T> * select_valid (const X& x, validator<X, T> &val, list2_node<T> **last = nullptr) const
+	list2_node<T> * select_valid (const search_conditions<X>& x, validator<search_conditions<X>, T> &val, list2_node<T> **last = nullptr) const
 	{
 		list2_node<T> *origin = nullptr, *prev = nullptr;
 		for (auto *curr = head ; curr ; curr = curr->next)
