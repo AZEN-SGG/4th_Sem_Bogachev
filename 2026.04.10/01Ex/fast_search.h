@@ -84,40 +84,77 @@ private:
 		list2_node<T> *origin 	= nullptr,
 				   *last	= nullptr;
 
-		validator<search_conditions<X>, T> val;
-
-		if (x.c_name == condition::eq)
+		if (x.op == operation::lor)
 		{
-			x.c_name = condition::none;
-			x.make_validator(val);
-			x.c_name = condition::eq;
-
-			auto suit_node = name_index->template search_node<T>(x);
-			// Не нашли узла с таким именем
-			if (!suit_node)
+			if (x.c_name == condition::eq)
 			{
-				origin = nullptr;
-				last = nullptr;
-			} else
-				origin = suit_node->template select_valid<X>(x, val, &last);
-		} else if (x.c_phone == condition::eq)
-		{
-			x.c_phone = condition::none;
-			x.make_validator(val);
-			x.c_phone = condition::eq;
+				auto node = name_index->search_node(x);
+				if (node)
+					origin = node->select_all(&last);
+				else
+				{
+					origin = nullptr;
+					last = nullptr;
+				}
+			}
 
-			auto suit_node = phone_index->template search_node<T>(x);
-			// Не нашли узла с таким номером
-			if (!suit_node)
+			if (x.c_phone == condition::eq)
 			{
-				origin = nullptr;
-				last = nullptr;
-			} else
-				origin = suit_node->template select_valid<X>(x, val, &last);
+				list2_node<T> *temp = nullptr,
+								*temp_l = nullptr;
+
+				auto node = phone_index->search_node(x);
+				if (node)
+				{
+					temp = node->select_all(&temp_l);
+
+					if (last)
+						last->link = temp;
+					else
+						origin = temp;
+
+					if (temp_l)
+						last = temp_l;
+				}
+			}
+		// Если и
 		} else
 		{
-			x.make_validator(val);
-			origin = select_valid(x, val, &last);
+			validator<search_conditions<X>, T> val;
+
+			if (x.c_name == condition::eq)
+			{
+				x.c_name = condition::none;
+				x.make_validator(val);
+				x.c_name = condition::eq;
+
+				auto suit_node = name_index->template search_node<T>(x);
+				// Не нашли узла с таким именем
+				if (!suit_node)
+				{
+					origin = nullptr;
+					last = nullptr;
+				} else
+					origin = suit_node->template select_valid<X>(x, val, &last);
+			} else if (x.c_phone == condition::eq)
+			{
+				x.c_phone = condition::none;
+				x.make_validator(val);
+				x.c_phone = condition::eq;
+
+				auto suit_node = phone_index->template search_node<T>(x);
+				// Не нашли узла с таким номером
+				if (!suit_node)
+				{
+					origin = nullptr;
+					last = nullptr;
+				} else
+					origin = suit_node->template select_valid<X>(x, val, &last);
+			} else
+			{
+				x.make_validator(val);
+				origin = select_valid(x, val, &last);
+			}
 		}
 
 		if (last_selected)
@@ -177,6 +214,50 @@ private:
 
 		return origin;
 	}
+
+	list2_node<T> * select_all (list2_node<T> **last = nullptr) { return select_all_in_subtree(name_index->root, last); }
+
+	template <ordering X>
+	static list2_node<T> * select_all_in_subtree (
+			rb_tree_node<data_tree<T, X>> *curr,
+			list2_node<T> **last_selected = nullptr
+	) {
+		list2_node<T> *origin = nullptr,
+						*last = nullptr;
+
+		if (curr)
+		{
+			list2_node<T> *temp_l = nullptr;
+
+			origin = curr->select_all(&last);
+			last->link = select_all_in_subtree(curr->left, &temp_l);
+			if (temp_l)
+				last = temp_l;
+
+			curr = curr->right;
+		}
+
+		for (; curr ; curr = curr->right)
+		{
+			list2_node<T> *temp_l = nullptr;
+
+			// Если не nullptr, значит там как минимум один элемент есть, значит есть и последний
+			last->link = curr->select_all(&temp_l);
+			temp_l->link = select_all_in_subtree(curr->left, &last);
+			if (!last)
+				last = temp_l;
+		}
+
+		if (last_selected)
+		{
+			if (last)
+				last->link = last;
+			*last_selected = last;
+		} else if (last)
+			last->link = nullptr;
+
+		return origin;
+	}
 };
 
 template <typename T, ordering X>
@@ -209,9 +290,14 @@ private:
 	{
 		list2_node<T> *origin = nullptr;
 
-		x.c_group = condition::none;
-		origin = hash[x.template get_hash<X>()].validate(x, last);
-		x.c_group = condition::eq;
+		if (x.op == operation::lor)
+			origin = hash[x.template get_hash<X>()].select_all(last);
+		else
+		{
+			x.c_group = condition::none;
+			origin = hash[x.template get_hash<X>()].validate(x, last);
+			x.c_group = condition::eq;
+		}
 
 		return origin;
 	}
@@ -269,10 +355,32 @@ private:
 		list2_node<T> *origin = nullptr,
 						*last = nullptr;
 
-		if (x.c_group == condition::eq)
-			origin = hash->validate(x, &last);
-		else
-			origin = trees->validate(x, &last);
+		if (x.op == operation::lor)
+		{
+			if (x.c_group == condition::eq)
+				origin = hash->validate(x, &last);
+
+			if (x.c_name == condition::eq ||
+				x.c_phone == condition::eq)
+			{
+				list2_node<T> *temp = nullptr,
+								*temp_l = nullptr;
+				temp = trees->validate(x, &temp_l);
+
+				if (last != nullptr)
+					last->link = temp;
+				else
+					origin = temp;
+
+				last = temp_l;
+			}
+		} else
+		{
+			if (x.c_group == condition::eq)
+				origin = hash->validate(x, &last);
+			else
+				origin = trees->validate(x, &last);
+		}
 
 		if (last_selected)
 		{

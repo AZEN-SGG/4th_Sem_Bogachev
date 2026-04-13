@@ -20,7 +20,7 @@ int main(int argc, char * argv[])
 {
     int res = 0;
 	io_status ret;
-    double t;
+    double time;
 	
     if (!(argc == 2)
 	) {
@@ -30,9 +30,7 @@ int main(int argc, char * argv[])
 
 	separator::init(" \t\n");
 
-    t = clock();
-	ret = solve(argv[1], &res);
-    t = (clock() - t) / CLOCKS_PER_SEC;
+	ret = solve(argv[1], &res, &time);
 
 	do {
 		switch (ret)
@@ -62,6 +60,6 @@ int main(int argc, char * argv[])
 		return 3;
 	} while (0);
 
-	fprintf(stdout, "%s : Result = %d Elapsed = %.2f\n", argv[0], res, t);
+	fprintf(stdout, "%s : Result = %d Elapsed = %.2f\n", argv[0], res, time);
     return 0;
 }
