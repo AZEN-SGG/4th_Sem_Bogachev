@@ -113,11 +113,15 @@ public:
 		list2_node<T> *origin = nullptr,
 						*last = nullptr;
 		
-		if (cond.op == operation::land &&
+		if ((cond.op == operation::land &&
 			((cond.c_group == condition::eq) ||
 			 (cond.c_name == condition::eq) ||
-			 (cond.c_phone == condition::eq)
-		))
+			 (cond.c_phone == condition::eq))) ||
+			((cond.op == operation::lor) &&
+			 ((cond.c_group == condition::none) &&
+			  (cond.c_phone == condition::eq || cond.c_phone == condition::none) &&
+			  (cond.c_name == condition::eq || cond.c_name == condition::none)))
+		)
 			origin = indexes->validate(cond, &last);
 		else
 		{

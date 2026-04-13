@@ -100,7 +100,11 @@ private:
 				last = nullptr;
 			} else
 				origin = suit_node->template select_valid<X>(x, val, &last);
-		} else if (x.c_phone == condition::eq)
+		}
+
+		if (x.op == operation::land && x.c_name == condition::eq);
+		// В случае или нам нужно запустить повторный поиск
+		else if (x.c_phone == condition::eq)
 		{
 			x.c_phone = condition::none;
 			x.make_validator(val);
