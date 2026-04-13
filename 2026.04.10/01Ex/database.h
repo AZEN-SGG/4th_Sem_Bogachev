@@ -1,6 +1,7 @@
 #ifndef DATABASE_H
 #define DATABASE_H
 
+#include "condition.h"
 #include "io_status.h"
 #include "operation.h"
 #include "ordering.h"
@@ -112,18 +113,19 @@ public:
 		list2_node<T> *origin = nullptr,
 						*last = nullptr;
 		
-		if (
-				(cond.op == operation::lor) && 
-				(!((cond.c_group == condition::eq || cond.c_group == condition::none) &&
-					(cond.c_phone == condition::eq || cond.c_phone == condition::none) &&
-					(cond.c_name == condition::eq || cond.c_name == condition::none))
-		)) {
+		if (cond.op == operation::land &&
+			((cond.c_group == condition::eq) ||
+			 (cond.c_name == condition::eq) ||
+			 (cond.c_phone == condition::eq)
+		))
+			origin = indexes->validate(cond, &last);
+		else
+		{
 			validator<search_conditions<X>, T> val;
 
 			cond.make_validator(val);
 			origin = db->select_valid(cond, val, &last);
-		} else
-			origin = indexes->validate(cond, &last);
+		}
 
 		if (last_selected)
 		{
