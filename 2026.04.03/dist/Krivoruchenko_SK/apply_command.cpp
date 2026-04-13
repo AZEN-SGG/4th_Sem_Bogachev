@@ -112,7 +112,6 @@ void command::apply_delete (list2<record> *worm, name_index_t *name_index, phone
 
 list2_node<record> * command::validate (list2<record> *worm, name_index_t *name_index, phone_index_t *phone_index)
 {
-	worm->clear_links();
 	list2_node<record> 	*curr = nullptr,
 						*last = nullptr;
 

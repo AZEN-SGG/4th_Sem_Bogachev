@@ -138,15 +138,19 @@ public:
 		}
 	}
 
-	static int print_sublist (const list2_node<T> *curr, FILE *fp = stdout, const ordering *order = nullptr)
+	static int print_sublist (list2_node<T> *curr, FILE *fp = stdout, const ordering *order = nullptr)
 	{
 		const ordering default_ordering[ORDERING_LEN] = {ordering::name, ordering::phone, ordering::group};
 		if (!order)
 			order = default_ordering;
 
 		int i = 0;
-		for (; curr ; curr = curr->link, ++i)
+		for (list2_node<T> *next = nullptr ; curr ; curr = next, ++i)
+		{
+			next = curr->link;
 			curr->print(fp, order);
+			curr->link = nullptr;
+		}
 
 		return i;
 	}
