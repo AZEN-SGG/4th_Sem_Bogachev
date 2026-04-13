@@ -24,9 +24,7 @@ int main(int argc, char * argv[])
 
 	separator::init(" \t\n");
 
-    t = clock();
-	ret = solve(argv[1], &res);
-    t = (clock() - t) / CLOCKS_PER_SEC;
+	ret = solve(argv[1], &res, &t);
 
 	do {
 		switch (ret)
