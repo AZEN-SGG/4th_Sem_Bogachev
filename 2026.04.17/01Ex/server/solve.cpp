@@ -4,14 +4,14 @@
 #include <ctime>
 
 
-io_status solve (char *path, char *filename, int *r, double *time)
+io_status solve (char *path, char *filename, int port, int *r, double *time)
 {
 	io_status ret;
 	auto db = new (std::nothrow) database_manager();
     if (db == nullptr)
 		return io_status::memory;
 
-	if (int err = db->setup())
+	if (db->setup(port))
 	{
 		delete db;
 		return io_status::network;

@@ -22,7 +22,6 @@ io_status database_manager::query_handler (char *buf, int *res, FILE *f_out)
 	(*res) = 0;
 	char *saveptr = nullptr,
 		 *cmd = buf;
-	int is_break = 0;
 
 	while ((cmd = strtok_r(cmd, ";\n", &saveptr)) != nullptr)
 	{

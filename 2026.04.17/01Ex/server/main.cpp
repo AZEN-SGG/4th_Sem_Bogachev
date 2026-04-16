@@ -19,19 +19,20 @@ bool separator::ch_[separator::char_len] = {};
 
 int main(int argc, char * argv[])
 {
-	int res = 0;
+	int port, res = 0;
 	io_status ret;
 	double time;
 	
-	if (!(argc == 2)
+	if (!(argc == 3 &&
+		sscanf(argv[2], "%d", &port) == 1)
 	) {
-		fprintf(stderr, "Usage: %s filename\n", argv[0]);
+		fprintf(stderr, "Usage: %s filename port\n", argv[0]);
 		return 1;
 	}
 
 	separator::init(" \t\n");
 
-	ret = solve(argv[0], argv[1], &res, &time);
+	ret = solve(argv[0], argv[1], port, &res, &time);
 
 	do {
 		switch (ret)
@@ -57,7 +58,7 @@ int main(int argc, char * argv[])
 				fprintf (stderr, "Error: Create, how is it possible?!\n"); // it is impossible...
 				break;
 			case io_status::network:
-				fprintf(stderr, "Error: While setup network\n");
+				fprintf(stderr, "Error: Something with server!\n");
 				break;
 			case io_status::quit:
 				fprintf(stdout, "Exiting programm...\n");

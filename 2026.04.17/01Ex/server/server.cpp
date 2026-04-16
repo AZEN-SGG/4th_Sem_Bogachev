@@ -62,7 +62,7 @@ io_status server::run (char *path, int *res)
 	if (err < 0)
 	{
 		perror("Server: listen queue failure");
-		return io_status::open;
+		return io_status::network;
 	}
 
 	FD_ZERO(&active_set);
@@ -78,7 +78,7 @@ io_status server::run (char *path, int *res)
 		if (err < 0)
 		{
 			perror("Server: select failure");
-			return io_status::read;
+			return io_status::network;
 		} else if (err == 0)
 		{
 			for (int i = 0 ; i < max_sock + 1; ++i)
@@ -91,7 +91,7 @@ io_status server::run (char *path, int *res)
 			
 			FD_ZERO(&active_set);
 			perror("Server: timeout");
-			return io_status::read;
+			return io_status::network;
 		}
 
 		for (int i = 0 ; i < max_sock + 1 ; ++i)
@@ -108,7 +108,7 @@ io_status server::run (char *path, int *res)
 					if (new_sock < 0)
 					{
 						perror("Server: accept failure");
-						return io_status::read;
+						return io_status::network;
 					}
 
 					fprintf (stdout, "Server: connect from host %s, port %d.\n", inet_ntoa(client.sin_addr), (unsigned int)ntohs(client.sin_port));
@@ -139,7 +139,7 @@ io_status server::run (char *path, int *res)
 						if (temp_fd < 0)
 						{
 							perror("Server: copy fd");
-							return io_status::read;
+							return io_status::network;
 						}
 
 						// Создаём поток для записи в сокет
@@ -148,7 +148,7 @@ io_status server::run (char *path, int *res)
 						{
 							close(temp_fd);
 							perror("Server: create stream");
-							return io_status::read;
+							return io_status::network;
 						}
 
 						// Обрабатываем запрос

@@ -29,7 +29,7 @@ private:
 	fd_set active_set;
 public:
 	server () = default;
-	~server () { erase(); }
+	virtual ~server () { erase(); }
 
 	int setup (const int p = 1505, const int t = 60);
 	io_status run (char *path, int *res); 
