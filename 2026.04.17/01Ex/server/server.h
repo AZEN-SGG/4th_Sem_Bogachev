@@ -3,9 +3,11 @@
 
 #include "io_status.h"
 
-#include <stdio.h>
-#include <errno.h>
-#include <stdlib.h>
+#include <ctime>
+#include <cstdio>
+#include <cerrno>
+#include <cstdlib>
+#include <cstddef>
 #include <string.h>
 #include <ctype.h>
 #include <sys/select.h>
@@ -23,15 +25,29 @@ private:
 	int port = 1505;
 	int max_sock = 0;
 	int timeout = 60; // Timeout через минуту
-	struct sockaddr_in addr;
+	struct sockaddr_in addr = {};
 	fd_set active_set;
 public:
 	server () = default;
+	~server () { erase(); }
 
 	int setup (const int p = 1505, const int t = 60);
-	int run (); 
+	io_status run (); 
 	
 	virtual io_status query_handler(char *buf, FILE *fp) = 0;
+private:
+	void erase ()
+	{
+		port = 1505;
+		sock = 0;
+		max_sock = 0;
+		addr = {};
+
+		for (int i = 0 ; i < max_sock ; ++i)
+			if (FD_ISSET(i, &active_set))
+				close(i);
+	}
+	int read_fd(int fd, char *buf);
 };
 
 #endif // SERVER_H

@@ -1,7 +1,7 @@
 #include <cstdio>
 #include <ctime>
 
-#include "fast_search.h"
+#include "server/database/fast_search.h"
 #include "io_status.h"
 #include "ordering.h"
 #include "record.h"
