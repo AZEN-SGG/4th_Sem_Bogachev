@@ -1,6 +1,139 @@
+#include "server.h"
+#include "io_status.h"
+#include <cstddef>
+#include <ctime>
+
+int server::setup (const int p, const int t)
+{
+	int err, opt = 1;
+
+	port = p;
+	timeout = t;
+
+	sock = socket(PF_INET, SOCK_STREAM, 0);
+	if (sock < 0)
+	{
+		perror("Server: cannot create socket");
+		return -1;
+	}
+
+	max_sock = sock;
+	setsockopt (sock, SOL_SOCKET, SO_REUSEADDR, (char *)&opt, sizeof(opt));
+
+	addr.sin_family = AF_INET;
+	addr.sin_port = htons(port);
+	addr.sin_addr.s_addr = htonl(INADDR_ANY);
+
+	err = bind(sock, (struct sockaddr *)&addr, sizeof(addr));
+	if (err < 0)
+	{
+		perror ("Server: cannot bind socket");
+		return -1;
+	}
+
+	return 0;
+}
+
+io_status server::run () 
+{
+	struct timeval tv;
+	int new_sock;
+	struct sockaddr_in client;
+	socklen_t size;
+	fd_set read_set;
+	double fd_time[FD_SETSIZE];
+
+	char buf[LEN];
+
+	int err = listen(sock, 3);
+	if (err < 0)
+	{
+		perror("Server: listen queue failure");
+		return io_status::open;
+	}
+
+	FD_ZERO(&active_set);
+	FD_SET(sock, &active_set);
+
+	while (1)
+	{
+		tv.tv_sec = timeout; // Секунды
+		tv.tv_usec = 0; // Микросекунды
+
+		read_set = active_set;
+		err = select(max_sock + 1, &read_set, NULL, NULL, &tv);
+		if (err < 0)
+		{
+			perror("Server: select failure");
+			return io_status::read;
+		} else if (err == 0)
+		{
+			for (int i = 0 ; i < max_sock ; ++i)
+				if (FD_ISSET(i, &active_set) && i == sock)
+					close(i);
+			
+			FD_ZERO(&active_set);
+			perror("Server: timeout");
+			return io_status::read;
+		}
+
+		for (int i = 0 ; i < max_sock ; ++i)
+		{
+			if (FD_ISSET(i, &read_set))
+			{
+				if (i == sock)
+				{
+					size = sizeof(client);
+					new_sock = accept(sock, (struct sockaddr *)&client, &size);
+					if (new_sock < 0)
+					{
+						perror("Server: accept failure");
+						return io_status::read;
+					}
+
+					fprintf (stdout, "Server: connect from host %s, port %d.\n", inet_ntoa(client.sin_addr), (unsigned int)ntohs(client.sin_port));
+					max_sock = max_sock < new_sock ? new_sock : max_sock;
+					FD_SET(new_sock, &active_set);
+				} else
+				{
+					err = readFromClient(i, buf);
+					if (err < 0)
+					{
+						// Либо ошибка, либо клиент оборвал соединение
+						close(i);
+						FD_CLR(i, &active_set);
+					} else
+					{
+						FILE *out = fdopen(i, "r");
+						io_status ret = query_handler(buf, out);
+						if (ret != io_status::success)
+						{
+
+							return ret;
+						}
+					}
+				}
+			} else if (FD_ISSET(i, &active_set) &&
+					(((clock() - fd_time[i]) / CLOCKS_PER_SEC) > timeout))
+			{
+				// Timeout
+				close(i);
+				FD_CLR(i, &active_set);
+				fd_time[i] = 0;
+			}
+		}
+	}
+
+	return io_status::success;
+}
+
+#include <cctype>
 #include <cstdio>
 #include <cstdlib>
 
+// read - write
+#include <sys/select.h>
+#include <unistd.h>
 #include <sys/types.h>
 
 // fd_set, socklen_t
@@ -16,7 +149,7 @@
 
 // Больше 1024, т.к. до - они зарезервированы
 #define PORT	5555
-#define BUFLEN	512
+#define BUFLEN	1234
 
 // fd - файловый дескриптор
 int readFromClient (int fd, char *buf);
@@ -61,7 +194,7 @@ int main (void)
 	// Передаём дескриптор на сокет
 	// SOL_SOCKET - "раздел" настроек, может быть например IPPROTO_TCP
 	// SO_REUSEADDR - имя опции, разрешает повторное использование адреса и порта
-	// Далее передаём значение
+	// Далее передаём значение, opt = 1 -> включаем опцию
 	// Передаём размер нашего типа (сколько нужно прочитать)
 	setsockopt(sock, SOL_SOCKET, SO_REUSEADDR, (char*)&opt, sizeof(opt));
 
@@ -132,8 +265,85 @@ int main (void)
 					// ntohs - приводит порт к привычному виду
 					fprintf(stdout, "Server: connect from host %s, port %d.\n", inet_ntoa(client.sin_addr), (unsigned int)ntohs(client.sin_port));
 					FD_SET(new_sock, &active_set);
+				} else
+				{
+					// Пришли данные в уже существующем соединении
+					err = readFromClient(i, buf);
+					if (err < 0)
+					{
+						// Произошла ошибка, либо конец подключения
+						close(i);
+						FD_CLR(i, &active_set);
+					} else
+					{
+						// Данные прочитаны
+						writeToClient(i, buf);
+						close(i);
+						FD_CLR(i, &active_set);
+						if (!strcmp(buf, "STOP"))
+						{
+							close(sock);
+							return 0;
+						}
+					}
+				}
 			}
 		}
 	}
 }
 
+int readFromClient (int fd, char *buf)
+{
+	int nbytes, len, i;
+
+	// Получаем длину сообщения
+	for (i = 0 ; i < (int)sizeof(int) ; i += nbytes)
+	{
+		nbytes = read(fd, &len + i, sizeof(int));
+		if (nbytes <= 0)
+		{
+			perror("Server: read length");
+			return -1;
+		}
+	}
+
+	if (len > BUFLEN)
+	{
+		perror("Server: too large message");
+		return -1;
+	}
+
+	// TCP сам переотправляет потерянные пакеты
+	for (i = 0 ; len > 0 ; i += nbytes, len -= nbytes)
+	{
+		nbytes = read(fd, buf + i, len);
+		if (nbytes < 0)
+		{
+			perror("Server: read message");
+			return -1;
+		} else if (nbytes == 0)
+		{
+			perror("Server: read truncated");
+			return -1;
+		}
+	}
+
+	if (i == 0)
+	{
+		fprintf(stderr, "Server: no message\n");
+		return -1;
+	} else
+	{
+		fprintf(stdout, "Server: get %d bytes of message: %s\n", i, buf);
+		return 0;
+	}
+}
+
+int writeToClient (int fd, char *buf)
+{
+	int nbytes, len, i;
+	unsigned char *s;
+
+	for (s = (unsigned char *)buf, len = 0 ; *s ; s++, len++)
+		*s = toupper(*s);
+}
