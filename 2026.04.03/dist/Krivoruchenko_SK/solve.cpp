@@ -2,7 +2,7 @@
 #include "database.h"
 
 
-io_status solve (char *filename, int *r)
+io_status solve (char *filename, int *r, double *time)
 {
 	auto db = new (std::nothrow) database();
     if (db == nullptr)
@@ -10,9 +10,15 @@ io_status solve (char *filename, int *r)
 
 	io_status ret = db->read_file(filename);
 	if (ret != io_status::success)
+	{
+		delete db;
 		return ret;
+	}
 
+
+	(*time) = clock();
 	ret = db->start(r);
+	(*time) = (clock() - *time) / CLOCKS_PER_SEC;
 	
 	delete db;
 	return ret;

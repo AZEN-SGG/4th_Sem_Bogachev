@@ -11,7 +11,10 @@ io_status solve (char *filename, int *r, double *time)
 
 	io_status ret = db->read_file(filename);
 	if (ret != io_status::success)
+	{
+		delete db;
 		return ret;
+	}
 
 	(*time) = clock();
 	ret = db->start(r);

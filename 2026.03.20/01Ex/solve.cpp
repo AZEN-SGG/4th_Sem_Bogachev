@@ -10,7 +10,10 @@ io_status solve (char *filename, int *r)
 
 	io_status ret = db->read_file(filename);
 	if (ret != io_status::success)
+	{
+		delete db;
 		return ret;
+	}
 
 	ret = db->start(r);
 	

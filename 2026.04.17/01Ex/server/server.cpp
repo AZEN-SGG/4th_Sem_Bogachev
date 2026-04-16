@@ -1,4 +1,8 @@
 #include "server.h"
+#include "io_status.h"
+#include <cstdio>
+#include <ctime>
+#include <sys/select.h>
 
 int server::setup (const int p, const int t)
 {
@@ -17,7 +21,11 @@ int server::setup (const int p, const int t)
 	}
 
 	max_sock = sock;
-	setsockopt (sock, SOL_SOCKET, SO_REUSEADDR, (char *)&opt, sizeof(opt));
+	if (setsockopt (sock, SOL_SOCKET, SO_REUSEADDR, (char *)&opt, sizeof(opt)) < 0)
+	{
+		perror("Server: setup socket");
+		return -1;
+	}
 
 	addr.sin_family = AF_INET;
 	addr.sin_port = htons(port);
@@ -26,6 +34,8 @@ int server::setup (const int p, const int t)
 	err = bind(sock, (struct sockaddr *)&addr, sizeof(addr));
 	if (err < 0)
 	{
+		close(sock);
+		sock = 0;
 		perror ("Server: cannot bind socket");
 		return -1;
 	}
@@ -33,14 +43,18 @@ int server::setup (const int p, const int t)
 	return 0;
 }
 
-io_status server::run () 
+io_status server::run (char *path, int *res) 
 {
 	struct timeval tv;
 	int new_sock;
 	struct sockaddr_in client;
 	socklen_t size;
 	fd_set read_set;
-	double fd_time[FD_SETSIZE];
+
+	// Время последнего подключения и результат каждого клиента
+	double fd_timeout[FD_SETSIZE] = {},
+		   fd_time[FD_SETSIZE] = {};
+	int fd_res[FD_SETSIZE] = {};
 
 	char buf[LEN];
 
@@ -67,16 +81,20 @@ io_status server::run ()
 			return io_status::read;
 		} else if (err == 0)
 		{
-			for (int i = 0 ; i < max_sock ; ++i)
-				if (FD_ISSET(i, &active_set) && i == sock)
+			for (int i = 0 ; i < max_sock + 1; ++i)
+				if (FD_ISSET(i, &active_set) &&
+						i != sock)
+				{
 					close(i);
+					(*res) += fd_res[i];
+				}
 			
 			FD_ZERO(&active_set);
 			perror("Server: timeout");
 			return io_status::read;
 		}
 
-		for (int i = 0 ; i < max_sock ; ++i)
+		for (int i = 0 ; i < max_sock + 1 ; ++i)
 		{
 			// Идём по всем возможным сокетам
 			if (FD_ISSET(i, &read_set))
@@ -97,13 +115,14 @@ io_status server::run ()
 
 					max_sock = max_sock < new_sock ? new_sock : max_sock;
 					FD_SET(new_sock, &active_set);
-					fd_time[i] = clock();
+					fd_timeout[new_sock] = clock();
+					fd_time[new_sock] = 0;
 				} else
 				{
 					// Сокет для чтения
 					
 					// Фиксируем взаимодействие с сокетом
-					fd_time[i] = clock();
+					fd_timeout[i] = clock();
 
 					err = read_fd(i, buf);
 					if (err < 0)
@@ -114,21 +133,46 @@ io_status server::run ()
 					} else
 					{
 						// Успешно прочитано
-						
+
 						// Создаём копию дескриптора для создания у него потока
 						int temp_fd = dup(i);
+						if (temp_fd < 0)
+						{
+							perror("Server: copy fd");
+							return io_status::read;
+						}
 
 						// Создаём поток для записи в сокет
 						FILE *out = fdopen(temp_fd, "w");
+						if (!out)
+						{
+							close(temp_fd);
+							perror("Server: create stream");
+							return io_status::read;
+						}
 
 						// Обрабатываем запрос
-						io_status ret = query_handler(buf, out);
-						if (ret != io_status::success)
+						double temp_t = clock();
+						io_status ret = query_handler(buf, fd_res + i, out);
+						fd_time[i] += (clock() - temp_t) / CLOCKS_PER_SEC;
+
+						if (ret != io_status::success &&
+							ret != io_status::quit)
 						{
-							for (int j = 0 ; j < max_sock ; ++j)
-								if (j != sock)
-									close(j);
+							fclose(out);
 							return ret;
+						}
+
+						// В случае выхода - закрываем соединение!
+						if (ret == io_status::quit)
+						{
+							fprintf(out, "%s : Result = %d Elapsed = %.2f\n", path, fd_res[i], fd_time[i]);
+
+							close(i);
+							FD_CLR(i, &active_set);
+
+							(*res) += fd_res[i];
+							fd_res[i] = 0;
 						}
 
 						// В конце вывода "\nEND\n"
@@ -138,16 +182,25 @@ io_status server::run ()
 					}
 				}
 			} else if (FD_ISSET(i, &active_set) &&
-					(((clock() - fd_time[i]) / CLOCKS_PER_SEC) > timeout) &&
+	(((clock() - fd_timeout[i]) / CLOCKS_PER_SEC) > timeout) &&
 					sock != i)
 			{
 				// Timeout
 				close(i);
+				
+				(*res) += fd_res[i];
+				fd_res[i] = 0;
+				
 				FD_CLR(i, &active_set);
+				fd_timeout[i] = 0;
 				fd_time[i] = 0;
 			}
 		}
 	}
+
+	for (int i = 0 ; i < max_sock + 1; ++i)
+		if (FD_ISSET(i, &active_set))
+			(*res) += fd_res[i];
 
 	return io_status::success;
 }
@@ -159,7 +212,7 @@ int server::read_fd (int fd, char *buf)
 	// Получаем длину сообщения
 	for (i = 0 ; i < (int)sizeof(int) ; i += nbytes)
 	{
-		nbytes = read(fd, &len + i, sizeof(int));
+		nbytes = read(fd, ((char*)&len) + i, sizeof(int) - i);
 		if (nbytes <= 0)
 		{
 			perror("Server: read length");
@@ -167,7 +220,7 @@ int server::read_fd (int fd, char *buf)
 		}
 	}
 
-	if (len > LEN)
+	if (len > LEN - 1)
 	{
 		perror("Server: too large message");
 		return -1;
@@ -194,6 +247,8 @@ int server::read_fd (int fd, char *buf)
 		return -1;
 	} else
 	{
+		// i равен количеству записанных байт, значит i-й - завершает
+		buf[i] = '\0';
 		fprintf(stdout, "Server: get %d bytes of message: %s\n", i, buf);
 		return 0;
 	}

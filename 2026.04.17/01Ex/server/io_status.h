@@ -12,6 +12,8 @@ enum class io_status
 	open,
 	read,
 	create,
+	quit,
+	network,
 };
 
 #endif // io_status_h

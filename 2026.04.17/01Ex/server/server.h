@@ -21,7 +21,7 @@
 class server
 {
 private:
-	int sock = 0;
+	int sock = -1;
 	int port = 1505;
 	int max_sock = 0;
 	int timeout = 60; // Timeout через минуту
@@ -32,20 +32,26 @@ public:
 	~server () { erase(); }
 
 	int setup (const int p = 1505, const int t = 60);
-	io_status run (); 
+	io_status run (char *path, int *res); 
 	
-	virtual io_status query_handler(char *buf, FILE *fp) = 0;
+	virtual io_status query_handler(char *buf, int *res, FILE *fp) = 0;
 private:
 	void erase ()
 	{
 		port = 1505;
-		sock = 0;
-		max_sock = 0;
 		addr = {};
 
-		for (int i = 0 ; i < max_sock ; ++i)
+		FD_CLR(sock, &active_set);
+		if (sock > 0)
+			close(sock);
+
+		for (int i = 0 ; i < max_sock + 1 ; ++i)
 			if (FD_ISSET(i, &active_set))
 				close(i);
+		
+		FD_ZERO(&active_set);
+		sock = 0;
+		max_sock = 0;
 	}
 	int read_fd(int fd, char *buf);
 };
