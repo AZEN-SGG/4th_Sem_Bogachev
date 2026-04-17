@@ -11,6 +11,7 @@ enum class net_status
 	connect,
 	write,
 	read,
+	memory,
 };
 
 #endif // NET_STATUS_H

@@ -19,7 +19,6 @@ io_status database_manager::query_handler (char *buf, int *res, FILE *f_out)
 	io_status ret = io_status::success;
 	command x;
 
-	(*res) = 0;
 	char *saveptr = nullptr,
 		 *cmd = buf;
 
@@ -27,8 +26,10 @@ io_status database_manager::query_handler (char *buf, int *res, FILE *f_out)
 	{
 		// Parse command
 		if ((ret = x.parse(cmd)) == io_status::format)
+		{
 			fprintf(f_out, "Wrong format of request!\n\n");
-		else if (ret != io_status::success)
+			ret = io_status::success;
+		} else if (ret != io_status::success)
 			break;
 		else if (x.get_type() == command_type::quit)
 		{

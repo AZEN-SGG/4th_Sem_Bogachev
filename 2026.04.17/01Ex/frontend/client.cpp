@@ -1,5 +1,8 @@
 #include "client.h"
+#include "net_status.h"
+#include <cstdio>
 #include <cstring>
+#include <unistd.h>
 
 
 net_status client::setup ()
@@ -53,21 +56,32 @@ net_status client::run (char *addr, int port)
 	if (ret != net_status::success)
 		return ret;
 
+	fprintf(stdout, "End of connection\n");
+	close(sock);
+	sock = -1;
+
 	return net_status::success;
 }
 
 net_status client::write_server(int fd, char *buf, int size)
 {
-	int nbytes, len, i;
+	int err, nbytes, len, i;
 
 	// Длина сообщения
-	len = strlen(buf) + 1;
+	len = strnlen(buf, size - 1) + 1;
 
 	// Пересылаем длину сообщения
-	if (write(fd, &len, sizeof(int)) != (int)sizeof(int))
+	if ((err = write(fd, &len, sizeof(int))) != (int)sizeof(int))
 	{
-		perror("Client: write length");
-		return net_status::write;
+		if (err < 0)
+		{
+			perror("Client: write len");
+			return net_status::write;
+		} else
+		{
+			fprintf(stdout, "Client: connection lost\n");
+			return net_status::success;
+		}
 	}
 
 	// Пересылаем len байт
@@ -80,8 +94,8 @@ net_status client::write_server(int fd, char *buf, int size)
 			return net_status::write;
 		} else if (nbytes == 0)
 		{
-			perror("Client: write truncated");
-			return net_status::write;
+			fprintf(stdout, "Client: write truncated\n");
+			return net_status::success;
 		}
 	}
 
@@ -122,6 +136,8 @@ net_status client::read_server(int fd, FILE *fp)
 					return net_status::write;
 				}
 			}
+
+			perror("Client: Connection lost");
 			break;
 		}
 

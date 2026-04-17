@@ -52,9 +52,9 @@ io_status server::run (char *path, int *res)
 	fd_set read_set;
 
 	// Время последнего подключения и результат каждого клиента
-	double fd_timeout[FD_SETSIZE] = {},
-		   fd_time[FD_SETSIZE] = {};
-	int fd_res[FD_SETSIZE] = {};
+	double fd_timeout[FD_SETSIZE + 1] = {},
+		   fd_time[FD_SETSIZE + 1] = {};
+	int fd_res[FD_SETSIZE + 1] = {};
 
 	char buf[LEN];
 
@@ -90,8 +90,8 @@ io_status server::run (char *path, int *res)
 				}
 			
 			FD_ZERO(&active_set);
-			perror("Server: timeout");
-			return io_status::network;
+			fprintf(stdout, "Server: timeout\n");
+			return io_status::success;
 		}
 
 		for (int i = 0 ; i < max_sock + 1 ; ++i)
@@ -249,7 +249,7 @@ int server::read_fd (int fd, char *buf)
 	{
 		// i равен количеству записанных байт, значит i-й - завершает
 		buf[i] = '\0';
-		fprintf(stdout, "Server: get %d bytes of message: %s\n", i, buf);
+//		fprintf(stdout, "Server: get %d bytes of message: %s\n", i, buf);
 		return 0;
 	}
 }

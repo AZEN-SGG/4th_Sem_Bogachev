@@ -21,16 +21,19 @@ DB_TARGET = server$(EXE)
 CL_TARGET = client$(EXE)
 
 DB_SRC = $(DB_DIR)/main.cpp \
-	$(DB_DIR)/solve.cpp \
-	$(DB_DIR)/pattern.cpp \
-	$(DB_DIR)/record.cpp \
-	$(DB_DIR)/command.cpp \
-	$(DB_DIR)/parse_command.cpp \
-	$(DB_DIR)/apply_command.cpp \
-	$(DB_DIR)/server.cpp \
-	$(DB_DIR)/database_manager.cpp
+		$(DB_DIR)/solve.cpp \
+		$(DB_DIR)/pattern.cpp \
+		$(DB_DIR)/record.cpp \
+		$(DB_DIR)/command.cpp \
+		$(DB_DIR)/parse_command.cpp \
+		$(DB_DIR)/apply_command.cpp \
+		$(DB_DIR)/server.cpp \
+		$(DB_DIR)/database_manager.cpp
 
-CL_SRC = $(CL_DIR)/main.cpp
+CL_SRC = $(CL_DIR)/main.cpp \
+		$(CL_DIR)/solve.cpp \
+		$(CL_DIR)/client.cpp \
+		$(CL_DIR)/database_client.cpp \
 
 DB_OBJ = $(DB_SRC:.cpp=.o)
 CL_OBJ = $(CL_SRC:.cpp=.o)
