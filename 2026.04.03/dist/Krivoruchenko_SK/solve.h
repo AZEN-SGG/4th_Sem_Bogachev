@@ -12,6 +12,6 @@
 #include <cstdio>
 #include <cstring>
 
-io_status solve (char *filename, int *r);
+io_status solve (char *filename, int *r, double *time);
 
 #endif // SOLVE_H
