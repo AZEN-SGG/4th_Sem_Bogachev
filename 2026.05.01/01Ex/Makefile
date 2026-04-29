@@ -15,7 +15,7 @@ else
 endif
 
 TARGET = a.$(EXE)
-OBJ = main.o launch.o
+OBJ = main.o solve.o
 
 %.o: %.cpp
 	g++ $(WFLAGS) -c $< -o $@

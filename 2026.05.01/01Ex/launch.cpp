@@ -12,32 +12,6 @@ int launch (char *path, char *filename, const char *s, int r)
 
 	io_status ret = olha->read_file(filename);
 
-	do {
-		switch (ret)
-		{
-			case io_status::success:
-				continue;
-			case io_status::open:
-				fprintf (stderr, "Error: Cannot open %s\n", filename);
-				break;
-			case io_status::format:
-				fprintf (stderr, "Error: Wrong format of file %s\n", filename);
-				break;
-			case io_status::eof:
-				fprintf (stderr, "Error: End of file %s\n", filename);
-				break;
-			case io_status::memory:
-				fprintf (stderr, "Error: MEMORY\n");
-				break;
-			case io_status::create:
-				fprintf (stderr, "Error: Create, how is it possible?!\n"); // it is impossible...
-				break;
-		}
-
-		delete olha;
-
-		return 3;
-	} while (0);
 
 	fprintf (stdout, "Original tree:\n");
 	olha->print(r);
