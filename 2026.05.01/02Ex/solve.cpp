@@ -27,10 +27,12 @@ int delete_duplicates (list_t& lines)
 {
 	auto sort_by_line = [](const line_t& x, const line_t& y)
 	{
-		if (x.first < y.first)
+		int cmp = x.first.compare(y.first);
+
+		if (cmp < 0)
 			return true;
 
-		if (x.first > y.first)
+		if (cmp > 0)
 			return false;
 
 		// Отличается от первого, т.к. обход прямой

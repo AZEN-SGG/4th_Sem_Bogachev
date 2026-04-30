@@ -27,10 +27,12 @@ int delete_duplicates (vec_t& vec)
 {
 	auto sort_by_line = [](const line_t& x, const line_t& y)
 	{
-		if (x.first < y.first)
+		int cmp = x.first.compare(y.first);
+
+		if (cmp < 0)
 			return true;
 
-		if (x.first > y.first)
+		if (cmp > 0)
 			return false;
 
 		// Поздние первыми, так как мы итерируем с конца
@@ -40,15 +42,12 @@ int delete_duplicates (vec_t& vec)
 	std::sort(vec.begin(), vec.end(), sort_by_line);
 
 	int len_del = 0;
-	line_t *temp_ptr = nullptr,
-			 temp;
+	line_t *temp_ptr = nullptr;
 	for (int i = vec.size() - 1 ; i >= 0 ; i--)
 	{
 		if (temp_ptr && ((*temp_ptr).first == vec[i].first))
 		{
-			temp = std::move(vec[vec.size() - 1 - len_del]);
-			vec[vec.size() - 1 - len_del] = std::move(vec[i]);
-			vec[i] = std::move(temp);
+			vec[i] = std::move(vec[vec.size() - 1 - len_del]);
 			len_del++;
 		} else
 			temp_ptr = &vec[i];
