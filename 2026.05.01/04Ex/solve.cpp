@@ -1,6 +1,9 @@
 #include "solve.h"
+#include <algorithm>
+#include <iterator>
+#include <utility>
 
-io_status read (FILE *in, dvec_t& lines)
+io_status read (FILE *in, dlist_t& lines)
 {
 	char BUF[LEN] = {};
 	
@@ -10,7 +13,7 @@ io_status read (FILE *in, dvec_t& lines)
 	return io_status::success;
 }
 
-int print (FILE *out, const dvec_t& lines) noexcept
+int print (FILE *out, const dlist_t& lines) noexcept
 {
 	int res = 0;
 
@@ -23,7 +26,7 @@ int print (FILE *out, const dvec_t& lines) noexcept
 	return res;
 }
 
-int number_duplicates (dvec_t& lines)
+int number_duplicates (dlist_t& lines)
 {
 	if (lines.empty())
 		return 0;
@@ -42,20 +45,20 @@ int number_duplicates (dvec_t& lines)
 		return x.second < y.second;
 	};
 
-	std::sort(lines.begin(), lines.end(), sort_by_line);
+	lines.sort(sort_by_line);
 
 	int num_diff = 1,
 		len_dupl = 1;
 	auto begin_section = lines.begin();
 	// В начале проверили, что вектор не пуст
-	for (auto it = lines.begin() + 1 ; it != lines.end() ; ++it)
+	for (auto it = std::next(lines.begin()) ; it != lines.end() ; ++it)
 	{
 		if (begin_section->first == it->first)
 			len_dupl++;
 		else
 		{
 			num_diff++;
-			for (auto jt = begin_section ; jt != it + 1 ; ++jt)
+			for (auto jt = begin_section ; jt != std::next(it) ; ++jt)
 				jt->second.second = len_dupl;
 			begin_section = it;
 			len_dupl = 1;
@@ -68,10 +71,10 @@ int number_duplicates (dvec_t& lines)
 	return num_diff;
 }
 
-io_status t3_solve (const char *f_in, const char *f_out, int& r)
+io_status t4_solve (const char *f_in, const char *f_out, int& r)
 {
 	io_status ret;
-	dvec_t lines;
+	dlist_t lines;
 
 	ret = read_file(f_in, lines);
 	if (ret != io_status::success)
@@ -80,7 +83,7 @@ io_status t3_solve (const char *f_in, const char *f_out, int& r)
 	r = number_duplicates(lines);
 
 	// Сортируем по второму полю
-	std::sort(lines.begin(), lines.end(), [](const dupl_t& x, const dupl_t& y) { return x.second.first < y.second.first; });
+	lines.sort([](const dupl_t& x, const dupl_t& y) { return x.second.first < y.second.first; });
 
 	int temp = 0;
 	ret = print_file(f_out, lines, temp);
