@@ -1,8 +1,4 @@
 #include "solve.h"
-#include "io_status.h"
-#include <algorithm>
-#include <cstdio>
-#include <utility>
 
 io_status read (FILE *in, vec_t& vec)
 {
@@ -18,7 +14,7 @@ int print (FILE *out, const vec_t& vec) noexcept
 {
 	int res = 0;
 
-	for (const vec_el_t& el : vec)
+	for (const line_t& el : vec)
 	{
 		res++;
 		fprintf(out, "%s", el.first.c_str());
@@ -29,7 +25,7 @@ int print (FILE *out, const vec_t& vec) noexcept
 
 int delete_duplicates (vec_t& vec)
 {
-	auto sort_by_line = [](const vec_el_t& x, const vec_el_t& y)
+	auto sort_by_line = [](const line_t& x, const line_t& y)
 	{
 		if (x.first < y.first)
 			return true;
@@ -44,7 +40,7 @@ int delete_duplicates (vec_t& vec)
 	std::sort(vec.begin(), vec.end(), sort_by_line);
 
 	int len_del = 0;
-	vec_el_t *temp_ptr = nullptr,
+	line_t *temp_ptr = nullptr,
 			 temp;
 	for (int i = vec.size() - 1 ; i >= 0 ; i--)
 	{
@@ -75,7 +71,7 @@ io_status t1_solve (const char *f_in, const char *f_out, int& r)
 	delete_duplicates(arr);
 
 	// Сортируем по второму полю
-	std::sort(arr.begin(), arr.end(), [](const vec_el_t& x, const vec_el_t& y) { return x.second < y.second; });
+	std::sort(arr.begin(), arr.end(), [](const line_t& x, const line_t& y) { return x.second < y.second; });
 
 	ret = print_file(f_out, arr, r);
 	if (ret != io_status::success)
