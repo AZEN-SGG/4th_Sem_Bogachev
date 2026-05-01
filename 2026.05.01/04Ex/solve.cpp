@@ -1,7 +1,4 @@
 #include "solve.h"
-#include <algorithm>
-#include <iterator>
-#include <utility>
 
 io_status read (FILE *in, dlist_t& lines)
 {

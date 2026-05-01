@@ -23,6 +23,7 @@ using dvec_t = std::vector<dupl_t>;
 using dlist_t = std::list<dupl_t>;
 
 using words_t = std::vector<std::string>;
+using lwords_t = std::list<std::string>;
 
 template <typename T>
 io_status read_file (const char *f_in, T& obj)
@@ -87,5 +88,12 @@ io_status read (FILE *in, words_t& obj);
 
 int number_contains (FILE *in, FILE *out, words_t& words, const char *t);
 io_status t5_solve (const char *a, const char *b, const char *f_out, const char *, int& r);
+
+// TASK 6
+
+io_status read (FILE *in, lwords_t& obj);
+
+int number_contains (FILE *in, FILE *out, lwords_t& words, const char *t);
+io_status t6_solve (const char *a, const char *b, const char *f_out, const char *, int& r);
 
 #endif // SOLVE_H

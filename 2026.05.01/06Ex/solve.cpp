@@ -1,6 +1,7 @@
 #include "solve.h"
+#include <algorithm>
 
-io_status read (FILE *in, words_t& lines)
+io_status read (FILE *in, lwords_t& words)
 {
 	std::string buf;
 	char BUF[LEN] = {};
@@ -10,16 +11,16 @@ io_status read (FILE *in, words_t& lines)
 		buf = BUF;
 		if ((!buf.empty()) && buf.back() == '\n')
 			buf.pop_back();
-		lines.emplace_back(std::move(buf));
+		words.emplace_back(std::move(buf));
 	}
 
 	return io_status::success;
 }
 
-int number_contains (FILE *in, FILE *out, words_t& words, const char *t)
+int number_contains (FILE *in, FILE *out, lwords_t& words, const char *t)
 {
-	std::sort(words.begin(), words.end());
-	words.erase(std::unique(words.begin(), words.end()), words.end());
+	words.sort();
+	words.unique();
 
 	int len_common = 0;
 	std::string temp;
@@ -38,7 +39,7 @@ int number_contains (FILE *in, FILE *out, words_t& words, const char *t)
 			temp[len - 1] = BUF[len - 1] = '\0';
 
 		for (char *str = BUF ; (str = strtok_r(str, t, &saveptr)) ; str = nullptr)
-			len_contains += std::binary_search(words.begin(), words.end(), str);
+			len_contains += (std::find(words.begin(), words.end(), str) != words.end());
 		
 		fprintf(out, "%d %s\n", len_contains, temp.c_str());
 		len_common += len_contains;
@@ -47,10 +48,10 @@ int number_contains (FILE *in, FILE *out, words_t& words, const char *t)
 	return len_common;
 }
 
-io_status t5_solve (const char *a, const char *b, const char *f_out, const char *t, int& r)
+io_status t6_solve (const char *a, const char *b, const char *f_out, const char *t, int& r)
 {
 	io_status ret;
-	words_t words;
+	lwords_t words;
 
 	ret = read_file(a, words);
 	if (ret != io_status::success)
