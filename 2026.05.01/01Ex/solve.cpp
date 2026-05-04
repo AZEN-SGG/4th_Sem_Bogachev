@@ -1,11 +1,21 @@
 #include "solve.h"
+#include <cstdio>
+#include <cstring>
 
 io_status read (FILE *in, vec_t& vec)
 {
+	int len = 0;
 	char BUF[LEN] = {};
 	
 	for (int num = 1 ; fgets(BUF, LEN, in) ; ++num)
-		vec.push_back(std::make_pair(BUF, num));
+	{
+		len = strlen(BUF);
+		while (BUF[len - 1] == '\n')
+			BUF[--len] = '\0';
+
+		if (len)
+			vec.emplace_back(BUF, num);
+	}
 
 	return io_status::success;
 }
@@ -17,7 +27,7 @@ int print (FILE *out, const vec_t& vec) noexcept
 	for (const line_t& el : vec)
 	{
 		res++;
-		fprintf(out, "%s", el.first.c_str());
+		fprintf(out, "%d %s\n", el.second, el.first.c_str());
 	}
 
 	return res;
@@ -41,21 +51,27 @@ int delete_duplicates (vec_t& vec)
 
 	std::sort(vec.begin(), vec.end(), sort_by_line);
 
-	int len_del = 0;
+	int size = vec.size() - 1;
 	line_t *temp_ptr = nullptr;
-	for (int i = vec.size() - 1 ; i >= 0 ; i--)
+	for (int i = size ; i >= 0 ; i--)
 	{
 		if (temp_ptr && ((*temp_ptr).first == vec[i].first))
 		{
-			vec[i] = std::move(vec[vec.size() - 1 - len_del]);
-			len_del++;
+			vec[i] = std::move(vec[size]);
+			if (temp_ptr == &vec[size])
+				temp_ptr = &vec[i];
+			size--;
 		} else
 			temp_ptr = &vec[i];
+
+		printf("--- NEXT ---\n");
+		printf("%d %d %s\n", i, vec[i].second, vec[i].first.c_str());
+		print(stdout, vec);
 	}
 
-	vec.erase(vec.end() - len_del, vec.end());
+	vec.erase(vec.begin() + size + 1, vec.end());
 
-	return len_del;
+	return size;
 }
 
 io_status t1_solve (const char *f_in, const char *f_out, int& r)
